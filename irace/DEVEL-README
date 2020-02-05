@@ -1,0 +1,130 @@
+README file for developers
+===========================
+
+CHECKING:
+========
+
+* ./check-reverse requires installing R package devtools, which
+  requires Rcurl, which requires:
+
+  $ sudo apt-get install curl libcurl4-gnutls-dev
+
+* --as-cran messages of the type: 
+
+  Undefined global functions or variables:
+     median p.adjust pchisq qt read.table recover rexp rnorm runif t.test
+     wilcox.test 
+
+  can be fixed by running:
+
+imports_for_undefined_globals <-
+function(txt, lst, selective = TRUE)
+{
+    if(!missing(txt))
+        lst <- scan(what = character(), text = txt, quiet = TRUE)
+    nms <- lapply(lst, find)
+    ind <- sapply(nms, length) > 0L
+    imp <- split(lst[ind], substring(unlist(nms[ind]), 9L))
+    if(selective) {
+        sprintf("importFrom(%s)",
+                vapply(Map(c, names(imp), imp),
+                       function(e)
+                           paste0("\"", e, "\"", collapse = ", "),
+                       ""))
+    } else {
+        sprintf("import(\"%s\")", names(imp))
+    }
+} 
+R> txt <- "median p.adjust pchisq qt read.table recover rexp rnorm runif t.test
+     wilcox.test" 
+R> writeLines(imports_for_undefined_globals(txt, selective = FALSE))
+
+And adding the result to NAMESPACE. Namespaces newly imported from also need to
+be listed in the Imports: field of DESCRIPTION.
+
+
+RELEASE Process:
+===============
+
+1. svn up
+
+2. "make check" passes
+
+3. "make cran" passes
+
+4. make releasebuild # Inspect the output for strange files!
+
+5. "make winbuild" passes. Wait for email and check logs!
+
+6. Send package to the maintainers of the packages listed in
+   "Reverse suggests" or "Reverse depend" at
+   https://cran.r-project.org/package=irace so they can check we do not
+   break their packages (this step would be automatic once ./check-reverse
+   above works). If everything is OK, continue, otherwise fix and goto 1.
+
+7. Update NEWS (add version number on top)
+
+8. make closeversion
+
+9. Use http://cran.r-project.org/submit.html to submit
+   Read http://cran.r-project.org/web/packages/policies.html
+
+10.a IF the package requires further changes:
+
+  * Make the changes.
+
+  * Repeat the whole RELEASE process above without bumping the version number.
+
+
+10.b IF the package is released in CRAN:
+
+  * Bump the version number in Makefile.
+
+  * make build # To update DESCRIPTION and other files with the new version."
+
+  * svn ci -m " * Bump development version to $NEW_VERSION
+
+11. Announce the release in the Google group:
+
+    https://groups.google.com/d/forum/irace-package
+
+Announce email
+==============
+
+Dear irace users,
+
+Version 2.2 of irace is available from CRAN:
+https://cran.r-project.org/package=irace
+
+
+There are significant bugfixes and only very minor interface changes so we recommend all users to
+upgrade:
+
+NEWS entry
+
+Best wishes,
+
+    Manuel López-Ibáñez.
+     
+
+
+
+Submission email
+================
+
+To: cran@R-project.org
+Subject: CRAN submission irace $VERSION
+
+Dear CRAN maintainers,
+
+I would like to submit version $VERSION of the irace package to CRAN.
+
+The NEWS section corresponding to this version is:
+
+More information about irace may be found at:
+
+    http://iridia.ulb.ac.be/irace
+
+Thanks in advance,
+
+    Manuel López-Ibáñez.
