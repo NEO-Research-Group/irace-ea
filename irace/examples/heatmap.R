@@ -1,7 +1,7 @@
 load("./irace.Rdata")
 library(irace)
 ## TODO: convert all this to functions:
-experiments <- iraceResults$experiments
+experiments <- iraceResults$experiments[,unique(iraceResults$iterationElites)]
 ## colsumna <- apply(experiments, 2, function(x) { sum(!is.na(x))})
 ## experiments <- experiments[, order(-colsumna)]
 #conf.ids <- colnames(iraceResults$experiments)[which(apply(iraceResults$experiments, 2, function(x) { sum(!is.na(x)) > 1}))]
@@ -193,21 +193,23 @@ irace.heatmap <- function (x, Rowv = NULL, Colv = if (symm) "Rowv" else NULL,
 # + Nice looking non-square matrices
 # + No dendrogram
 # - Too busy x-axis labels (disabled here)
-irace.levelplot <- function(x)
+irace.levelplot <- function(x, xaxes = FALSE)
 {
   library(lattice)
-  x <- apply(x, 1, rank, na.last = "keep") #as.matrix(scale(experiments))
+#  x <- apply(x, 1, rank, na.last = "keep") #as.matrix(scale(experiments))
+  x <- t(x)
   # scale data to mean=0, sd=1 and convert to matrix ?
   #x <- as.matrix(scale(x))
-  levelplot(x = x, xlab="Configurations", ylab="Instances", aspect="fill",
-            col.regions = gray.colors(100, start = 0, end = 0.6),
-            scales = list(tck = c(0,0), x=list(draw=FALSE)))
+  levelplot(x = x, xlab="Configurations", ylab="Scenarios", aspect="fill",
+            #col.regions = gray.colors(20, start = 0, end = 0.8),
+            col.regions = heat.colors(20),
+            scales = list(tck = c(0,0), x=list(draw = xaxes)))
   #levelplot (as.matrix(scale(mtcars)), aspect = "iso",scale=list(x=list(rot=45)))
 }
 
 #matrix.plot(experiments)
 
-#irace.levelplot(experiments)
+irace.levelplot(experiments)
 
 # If x has missing values, this function does not work
 # NA/NaN/Inf in foreign function call (arg 11)
@@ -239,3 +241,8 @@ irace.heatmap(experiments[,1:100], Rowv = NULL, Colv = NULL,
 
 # create heatmap and don't reorder columns
 heatmap(mtscaled, Colv=F, scale='none')
+
+library(corrplot)
+corrplot(cor(t(experiments), method="spearman"), method="color", order="hclust")
+irace:::concordance(experiments)
+irace:::dataVariance(experiments)

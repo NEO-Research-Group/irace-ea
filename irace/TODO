@@ -4,6 +4,20 @@ BUGS: see BUGS file
 
 TODO R package:
 
+ * Look at https://cran.r-project.org/web/packages/argparser/index.html or
+   optparse: See examples/optparse.R
+   NOTE: Currently error messages cannot be
+   customized, so we cannot use this. But it could be an inspiration to write
+   our own class.
+
+ * Use
+   https://github.com/seandavi/F1000R_BiocWorkflows/blob/master/rnwConversion/processesRnw.R
+   to convert the user-guide to Rmarkdown, then use pkgdown to generate a nice
+   website.
+
+ * use devtools::release() to release
+   http://r-pkgs.had.co.nz/release.html#release-submission
+ 
  * Add inst/COPYRIGHTS. See race package.
 
  * Fix check-reverse so we can check reverse dependencies before
@@ -15,6 +29,34 @@ TODO R package:
 
 TODO General (in order of importance):
 
+ * Federico's implementation of DAG / Complexity metric.
+ 
+ * https://github.com/ndangtt/irace-to-pimp
+ 
+ * Use both cost and time to calculate wins, then use a prop.test
+   prop.test(x=c(sum(x <0.5),sum(y<0.5)), n=c(length(x), length(y)))
+
+   The Fisher Exact probability test is an excellent non-parametric technique for comparing proportions, when the two independent samples are small in size.
+
+ * Avoid duplicated elites.
+ 
+ * Sensitivity analysis: try values around the best configuration found, one at
+   a time.
+
+ * Give priority to user-provided configurations or to default/preferred
+   parameter values when choosing between similarly performing configurations.
+
+ * maxBound should a floating-point number. 
+
+ * Write a report at the end that checks if the instances are homogeneous and
+   suggests clusters and sub-configurations. One possibility is to replace
+   missing data with the mean of the row (across configurations), such that the
+   metric is optimistic. Create a diagnostic scatter-plot of training versus
+   testing.
+
+ * Automatic split training and testing instances given a percentage.
+   Stratified version that takes into account features.
+    
  * Fix all FIXMEs.
 
  * Fix bugs in BUGS file.
@@ -22,6 +64,11 @@ TODO General (in order of importance):
  * Various initialization modes Latin Hyper-cube, random, exhaustive,
    Hammersley point set, etc.
 
+ * Use saveRDS/readRDS instead of load/save to avoid overriding userspace.
+ 
+ * Use https://cran.r-project.org/web/packages/optparse/index.html
+   to handle command-line options.
+   
  * In elitist irace, target-evaluator is always called on elite configurations,
    while the corresponding target-runner is called only once. Hence, the
    files/data required by target-evaluator must be kept around for future
@@ -35,8 +82,6 @@ TODO General (in order of importance):
  * crayon: Colored Terminal Output
    https://cran.r-project.org/package=crayon
     
- * Use testthat package for testing: http://r-pkgs.had.co.nz/tests.html
- 
  * The truncated normal distribution actually gives more probability to the
    side further away from the mean (that is, the integral of the PDF is larger
    on the side where the distance is larger from the mean). This is not really
@@ -64,6 +109,12 @@ TODO General (in order of importance):
  * Compute how many possible parameter configurations (w.r.t. discrete
    values) can be sampled.
 
+ * Compositional parameter values (parameter values that must sum up to 1 or
+   100) could be transformed into Euclidean space by using isometric log-ratio
+   transformation (Egozcue, J.J., et al., 2003. Isometric logratio
+   transformations for compositional data. Mathematical Geology)
+   or mixture models.   
+   
  * Detect the case where all possible parameter configurations can be sampled
    and there is still enough budget to do at least one test. In that case, it
    is not worth it to sample configurations and do several iterations. It is
@@ -132,10 +183,6 @@ TODO General (in order of importance):
  * race package has some recent updates. Check with Mauro what he
    changed.
 
- * Implement some kind of immediate rejection handling, that is, if
-   target-runner returns +Inf, just discard the candidate immediately
-   without doing any more tests.
-
  * Implement a regression testing testsuite to check that everything
    is working as expect before making a release. See:
 
@@ -164,8 +211,17 @@ TODO General (in order of importance):
  * Use the options() mechanism of R, that is,
    options(irace.debug.level = 1) and getOption("irace.debug.level").
 
+ * Add some criteria for the debug levels. For example:
+
+   debug-level 1 -> print one-time info about internal parameters, steps and decisions
+   debug-level 2 -> also print what is executed and received by irace (messes
+   up the output slightly)
+   debug-level 3 -> internal information such as memory use
+   debug-level 4 -> extra verbose internal information
+   
  * It may be possible to byte-compile the conditions as they are read.
-   This may speed-up conditionsSatisfied().
+   This may speed up conditionsSatisfied(). However, compiled TRUE conditions
+   are slower than byte-compiled, so it doesn't seem a big gain to compile those. 
 
  * JEREMIE: I would like to try a version of I-Race with a kind of
    bounding in the probability vectors, something equivalent somehow
@@ -201,16 +257,8 @@ TODO General (in order of importance):
  * If we have too many elites, remove some of them. Add a parameter
    --max-elites.
 
- * Add example of logarithmic/parameter conversions in target-runner.
-
  * Make the update model convergence take into account the hierarchy
    of parameters.
-
- * oneParamUpperBound and oneParamLowerBound are too much. We can
-   have a single function: paramBound that returns
-      return (as.numeric(parameters[["domain"]][[paramName]]))
-   then the user can use directly [1] or [2] to select whatever they
-   want. [Jeremie]
 
  * Error/Warn about unknown irace parameters.
 
@@ -221,6 +269,10 @@ TODO General (in order of importance):
 
  * Add a hook that after sampling post-processes the candidates.
 
+ * system2 now has a timeout parameter (R 3.5). Add a scenario parameter
+   that specifies the maximum time to wait for any run of target-runner to
+   avoid infinite loops.
+   
  * Many of our "objects" could be defined as S4 classes. For example:
    setClass("Parameters", slots=c(names="character", types="character",
                                   switches = "character", domain = "list",
@@ -232,6 +284,30 @@ TODO General (in order of importance):
 ------------------------------------------------------------------------------
 
 DONE:
+
+ * https://builder.r-hub.io/ [DONE by Manuel]
+
+ * How to run individual tests from the make. Check testthat documentation.
+   [DONE by Manuel]
+
+ * Use testthat package for testing: http://r-pkgs.had.co.nz/tests.html
+   [DONE by Manuel]
+ 
+ * Add --par integer >= 1 (PAR=), default 1: penalise timeouts or execution
+   failures with PAR * value. [DONE by Leslie as boundPar]
+
+ * Add example of logarithmic/parameter conversions in target-runner.
+   [We now handle log conversion internally]
+
+ * oneParamUpperBound and oneParamLowerBound are too much. We can
+   have a single function: paramBound that returns
+      return (as.numeric(parameters[["domain"]][[paramName]]))
+   then the user can use directly [1] or [2] to select whatever they
+   want. [More or less DONE]
+
+ * Implement some kind of immediate rejection handling, that is, if
+   target-runner returns +Inf, just discard the candidate immediately
+   without doing any more tests. [DONE by Manuel]
 
  * It would be useful to report the command-line string passed to irace in the
    output (for logging purposes) and save it in the log file (for further
@@ -248,7 +324,7 @@ DONE:
    for PBS and SGE in examples/.
    [DONE by Manuel]
 
-* Move the README information to the TR (vignette) to avoid duplication.
+ * Move the README information to the TR (vignette) to avoid duplication.
    [DONE by Leslie, Manuel]
 
  * Pass to target-runner/hook-evaluate an instance index that uniquely

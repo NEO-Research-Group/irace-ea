@@ -1,8 +1,52 @@
 README file for developers
 ===========================
 
+Subversion commands
+---------------------
+
+# Send your changes to the repository (for your branch only)
+svn ci -m "Explain your changes"
+# Update your local copy with changes in the repository (for your branch only)
+svn up 
+# See differences in your local copy (against your branch only)
+svn diff
+# See differences between branches
+svn diff ^/trunk .
+# Merge changes in trunk into your local copy
+svn merge ^/trunk .
+# Get help
+svn help
+
+
+Developing irace
+----------------
+
+* make build
+
+  Build irace
+
+* make install
+
+  Build and install the package
+  
+* make cran
+
+  Check that the build is acceptable by CRAN
+
+* make check
+
+  More thoroughly test the build
+
+* make quick-install
+
+  Do a minimal build and install that has as few requirements as
+  possible. Designed for installing on machines that are not used for
+  development, like IRIDIA's cluster.
+  
+  
+
 CHECKING:
-========
+-----------
 
 * ./check-reverse requires installing R package devtools, which
   requires Rcurl, which requires:
@@ -44,39 +88,47 @@ be listed in the Imports: field of DESCRIPTION.
 
 
 RELEASE Process:
-===============
+-----------------
 
 1. svn up
 
-2. "make check" passes
+2. make check # passes
 
-3. "make cran" passes
+3. make cran  # passes
 
-4. make releasebuild # Inspect the output for strange files!
 
-5. "make winbuild" passes. Wait for email and check logs!
+4. make examples # Takes a few hours. Inspect the examples in the vignette.
 
-6. Send package to the maintainers of the packages listed in
-   "Reverse suggests" or "Reverse depend" at
-   https://cran.r-project.org/package=irace so they can check we do not
-   break their packages (this step would be automatic once ./check-reverse
-   above works). If everything is OK, continue, otherwise fix and goto 1.
+5. make releasebuild # Inspect the output for strange files!
+
+6. make winbuild # passes. Wait for the 2 emails and check logs!
 
 7. Update NEWS (add version number on top)
 
 8. make closeversion
 
-9. Use http://cran.r-project.org/submit.html to submit
+9. Send package as a pre-release to:
+
+   * The maintainers of the packages listed in "Reverse suggests" or "Reverse
+     depend" at https://cran.r-project.org/package=irace so they can check we
+     do not break their packages (this step would be automatic once
+     ./check-reverse above works). 
+   * Google group
+   * IRIDIAns
+
+11. If everything is OK, continue, otherwise fix and goto 1.
+
+11. Use http://cran.r-project.org/submit.html to submit
    Read http://cran.r-project.org/web/packages/policies.html
 
-10.a IF the package requires further changes:
+12.a IF the package requires further changes:
 
   * Make the changes.
 
   * Repeat the whole RELEASE process above without bumping the version number.
 
 
-10.b IF the package is released in CRAN:
+12.b IF the package is released in CRAN:
 
   * Bump the version number in Makefile.
 
@@ -84,9 +136,10 @@ RELEASE Process:
 
   * svn ci -m " * Bump development version to $NEW_VERSION
 
-11. Announce the release in the Google group:
+13. Announce the release in the Google group:
 
     https://groups.google.com/d/forum/irace-package
+
 
 Announce email
 ==============

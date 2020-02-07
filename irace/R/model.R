@@ -10,7 +10,7 @@
 # one element per categorical parameter.  Each categorical parameter
 # contains a list of vector. This list contains elements which are the
 # .ID. of the configuration. 
-initialiseModel <- function (parameters, configurations)
+initialiseModel <- function (parameters, configurations, digits)
 {
   model <- list()
   nbConfigurations <- nrow(configurations)
@@ -21,16 +21,18 @@ initialiseModel <- function (parameters, configurations)
     param <- list()
     if (type == "c") {
       value <- rep((1 / nbValues), nbValues)
-    } else if (type == "i" || type == "r") {
-      lowerBound <- paramLowerBound(currentParameter, parameters)
-      upperBound <- paramUpperBound(currentParameter, parameters)
-      value <- (upperBound - lowerBound) / 2
+    } else if (type %in% c("i","r")) {
+      value <- init.model.numeric(currentParameter, parameters)
     } else {
       irace.assert(type == "o")
       value <- (nbValues - 1) / 2
     }
     for (indexConfig in seq_len(nbConfigurations)) {
       idCurrentConfig <- as.character(configurations[indexConfig, ".ID."])
+      # Assign current parameter value to model
+      if (type %in% c("i","r")) {
+        value[2] <- configurations[indexConfig, currentParameter]
+      }
       param[[idCurrentConfig]] <- value
     }
     model[[currentParameter]] <- param
@@ -51,7 +53,7 @@ updateModel <- function (parameters, eliteConfigurations, oldModel,
 
     for (currentParameter in parameters$names[!parameters$isFixed]) {
       type <- parameters$types[[currentParameter]]
-
+      
       ## If the elite is older than the current iteration, it has
       ## its own model that has evolved with time. If the elite is
       ## new (generated in the current iteration), it does not have
@@ -70,6 +72,10 @@ updateModel <- function (parameters, eliteConfigurations, oldModel,
         idParent <- as.character(idParent)
         # cat("The parent found is ", idParent, "\n")
         probVector <- oldModel[[currentParameter]][[idParent]]
+        # Change the current parameter value of the model
+        if (type %in% c("i", "r") &&
+            !is.na(eliteConfigurations[idCurrentConfiguration,currentParameter]))
+          probVector[2] <- eliteConfigurations[idCurrentConfiguration,currentParameter]
       }
       # cat("probVector: ", probVector)
 
@@ -105,9 +111,8 @@ updateModel <- function (parameters, eliteConfigurations, oldModel,
           #print(newVector)  
         }
       } else {
-        irace.assert(type == "i" || type == "r" || type == "o")
-        # Not really a vector but stdDev factor
-        probVector <- probVector * ((1 / nbNewConfigurations)^(1 / parameters$nbVariable))
+        irace.assert(type %in% c("i", "r", "o"))
+        probVector[1] <- probVector[1] * ((1 / nbNewConfigurations)^(1 / parameters$nbVariable))
       }
       newModel[[currentParameter]][[idCurrentConfiguration]] <- probVector
     }
@@ -122,7 +127,7 @@ printModel <- function (model)
 }
 
 restartConfigurations <- function (configurations, restart.ids, model, parameters,
-                               nbConfigurations)
+                               nbConfigurations, digits)
 {
   #print(configurations)
   tmp.ids <- c()
@@ -147,21 +152,37 @@ restartConfigurations <- function (configurations, restart.ids, model, parameter
         probVector <- 0.9 * probVector + 0.1 * max(probVector)
         model[[param]][[id]] <- probVector / sum(probVector)
       } else {
-        irace.assert(type == "i" || type == "r" || type == "o")
         if (type == "i" || type == "r") {
-          lowerBound <- paramLowerBound(param, parameters)
-          upperBound <- paramUpperBound(param, parameters)
-          value <- (upperBound - lowerBound) / 2
+          value <- init.model.numeric(param, parameters)
+          # We keep the value of the configuration as last known
+          value[2] <- configurations[id, param]
         } else {
           irace.assert(type == "o")
           value <- (length(parameters$domain[[param]]) - 1) / 2
         }
         # Bring back the value 2 iterations or to the second iteration value.
-        model[[param]][[id]] <-
-          min(model[[param]][[id]] * (nbConfigurations^(2 / parameters$nbVariable)),
-              value * ((1 / nbConfigurations)^(1 / parameters$nbVariable)))
+        stdev <- model[[param]][[id]][1]
+        model[[param]][[id]][1] <- min(stdev * (nbConfigurations^(2 / parameters$nbVariable)),
+                                       value[1] * ((1 / nbConfigurations)^(1 / parameters$nbVariable)))
       }
     }
   }
   return (model) 
+}
+
+# Initialise model in case of numerical variables.
+# it retuns an array size 2, first number indicates the 
+# standard deviation and second the last known value (initially NA)
+init.model.numeric <- function(param, parameters)
+{
+  lower <- paramLowerBound(param, parameters)
+  upper <- paramUpperBound(param, parameters)
+  transf <- parameters$transform[[param]]
+  if (transf == "log") {
+    lower <- 0
+    upper <- 1
+  }
+  value <- (upper - lower) / 2.0
+  irace.assert(is.finite(value))
+  return(c(value, NA))
 }

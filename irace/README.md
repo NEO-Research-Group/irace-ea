@@ -1,8 +1,9 @@
 **irace**: Iterated Racing for Automatic Algorithm Configuration
 ================================================================
 
-[![CRAN\_Status\_Badge](http://www.r-pkg.org/badges/version-last-release/irace)](https://CRAN.R-project.org/package=irace)
-[![CRAN Downloads](http://cranlogs.r-pkg.org/badges/grand-total/irace)](https://CRAN.R-project.org/package=irace)
+[![CRAN Status](https://www.r-pkg.org/badges/version-last-release/irace)](https://cran.r-project.org/package=irace) [![CRAN Downloads](https://cranlogs.r-pkg.org/badges/grand-total/irace)](https://CRAN.R-project.org/package=irace) 
+
+[ [**Homepage**](http://iridia.ulb.ac.be/irace/) ] [ [**User Guide (PDF)**](https://cran.r-project.org/package=irace/vignettes/irace-package.pdf) ] 
 
 **Maintainers:** [Manuel López-Ibáñez](http://lopez-ibanez.eu), Leslie Pérez Cáceres
 
@@ -12,6 +13,8 @@
   Yuan and Prasanna Balaprakash.
 
 **Contact:** <https://groups.google.com/d/forum/irace-package>
+
+---------------------------------------
 
 Introduction
 ============
@@ -28,7 +31,7 @@ It builds upon the race package by Birattari and it is implemented in R.
 
  1. M. López-Ibáñez, J. Dubois-Lacoste, L. Pérez Cáceres, T. Stützle, and
     M. Birattari. [The irace package: Iterated Racing for Automatic Algorithm Configuration.](http://dx.doi.org/10.1016/j.orp.2016.09.002).
-    *Operations Research Perspectives*, 3:43–58, 2016.<br>
+*Operations Research Perspectives*, 3:43–58, 2016.<br>
     [ [bibtex](http://lopez-ibanez.eu/LopezIbanez_bib.html#LopDubPerStuBir2016irace) 
     |
     doi:[10.1016/j.orp.2016.09.002](http://dx.doi.org/10.1016/j.orp.2016.09.002) ]
@@ -47,14 +50,14 @@ It builds upon the race package by Birattari and it is implemented in R.
 
 
 Requisites
-==========
+----------
 
  * R (<https://www.r-project.org>) is required for running irace, but
    you don't need to know the R language to use it.
    Versions that work: >= 2.15.0
 
 User guide
-==========
+----------
 
 A complete [user guide](https://cran.r-project.org/package=irace/vignettes/irace-package.pdf)
 comes with the package. You can access it online or, after installing the irace
@@ -117,8 +120,8 @@ below.
 Installing the irace package
 ============================
 
-Install the [irace](http://iridia.ulb.ac.be/irace) R package on your
-computer. There are two methods:
+There are two methods for installing the [irace](http://iridia.ulb.ac.be/irace) R package on your
+computer:
 
 1. Install within R (automatic download):
 ```R
@@ -156,13 +159,13 @@ Once installed, test that it is working by doing:
     R> system.file(package="irace")
     [1] "~/R/irace"
 ```
+The last command tells you the installation directory of `irace`.
 
 GNU/Linux and OS X
 ------------------
 
-The last command tells you the installation directory of `irace`. Save
-that path to a variable, and add it to your `.bash_profile`, `.bashrc`
-or `.profile`:
+Save the installation directory of `irace` to a variable, and add it to your
+`.bash_profile`, `.bashrc` or `.profile`:
 
 ```bash
     export IRACE_HOME=~/R/irace/ # Path given by system.file(package="irace")
@@ -181,8 +184,20 @@ invoke `irace` as follows:
 Windows
 -------
 
-Unfortunately, the command-line wrapper does not work in Windows. To
-launch irace, you need to open the R console and execute:
+If the installation directory of `irace` is `C:/R/irace/`, you can invoke
+`irace` by opening a terminal (launch the program `cmd.exe`) and executing:
+
+```bash
+    C:\> C:\R\irace\bin\x64\irace.exe --help
+```
+
+or if you are in a 32-bits system, executing:
+
+```bash
+    C:\> C:\R\irace\bin\i386\irace.exe --help
+```
+
+You can also launch irace by opening the R console and executing:
 
 ```R
     R> library(irace)
@@ -202,6 +217,7 @@ Usage
 ```bash
         $ cp $IRACE_HOME/templates/*.tmpl .
 ```
+
     where `$IRACE_HOME` is the path to the installation directory of
     `irace`. It can be obtained by doing:
 
@@ -228,14 +244,15 @@ Usage
    create a file that specifies which instances from that directory
    should be run and which instance-specific parameters to use. See
    `scenario.txt.tmpl` and `instances-list.tmpl` for examples. The command
-   irace will not attempt to create the execution directory (execDir),
-   so it must exist before calling irace. The default execDir is the
+   irace will not attempt to create the execution directory (`execDir`),
+   so it must exist before calling irace. The default `execDir` is the
    current directory.
 
 5. Calling the command:
 ```bash
         $ cd ~/tuning/ && $IRACE_HOME/bin/irace
 ```
+
     performs one run of Iterated Race. See the output of `irace --help` for
     additional irace parameters. Command-line parameters override the
     scenario setup specified in the `scenario.txt` file.
@@ -251,9 +268,9 @@ program
     $ cd ~/tuning/ && $IRACE_HOME/bin/parallel-irace N
 ```
 
-where N is the number of repetitions. By default, the execution
-directory of each run of irace will be set to `./execdir-dd`, where `dd` is a
-number padded with zeroes.
+where N is the number of repetitions. By default, the execution directory of
+each run of irace will be set to `./execdir-dd`, where `dd` is a number padded
+with zeroes.
 
 **Be careful**, `parallel-irace` will create these directories from
 scratch, deleting them first if they already exist.
@@ -268,6 +285,35 @@ A single run of irace can be done much faster by executing the calls
 to `targetRunner` (the runs of the algorithm being tuned) in
 parallel. See the [user guide](https://cran.r-project.org/package=irace/vignettes/irace-package.pdf) for the details.
 
+License
+=======
+
+This software is Copyright (C) 2011-2018 Manuel López-Ibáñez and Jérémie
+Dubois-Lacoste.
+
+This program is free software (software libre); you can redistribute it and/or
+modify it under the terms of the GNU General Public License as published by the
+Free Software Foundation; either version 2 of the License, or (at your option)
+any later version.
+
+This program is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+PARTICULAR PURPOSE. See the [GNU General Public License](https://cran.r-project.org/web/licenses/GPL-3) for more details.
+
+**IMPORTANT NOTE:** Please be aware that the fact that this program is released as
+Free Software does not excuse you from scientific propriety, which obligates
+you to give appropriate credit! If you write a scientific paper describing
+research that made substantive use of this program, it is your obligation as a
+scientist to (a) mention the fashion in which this software was used in the
+Methods section; (b) mention the algorithm in the References section. The
+appropriate citation is:
+
+> Manuel López-Ibáñez, Jérémie Dubois-Lacoste, Leslie Pérez Cáceres, Thomas
+> Stützle, and Mauro Birattari.
+> [**The irace package: Iterated Racing for Automatic Algorithm Configuration.**](http://dx.doi.org/10.1016/j.orp.2016.09.002)
+> _Operations Research Perspectives_, 2016.
+
+The race package is Copyright (C) 2003 Mauro Birattari, used under the GPL.
 
 Frequently Asked Questions
 ==========================

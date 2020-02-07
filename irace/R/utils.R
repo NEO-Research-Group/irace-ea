@@ -3,7 +3,7 @@
 # FIXME: Reload dynamic libraries? See ?dyn.load
 irace.reload.debug <- function(package = "irace")
 {
-  pkg <- paste("package:", package, sep ="")
+  pkg <- paste0("package:", package)
   try(detach(pkg, character.only = TRUE, unload = TRUE))
   library(package, character.only = TRUE)
   options(error = if (interactive()) utils::recover else
@@ -12,22 +12,21 @@ irace.reload.debug <- function(package = "irace")
 
 .irace.prefix <- "== irace == "
 
-.irace.bug.report <-
-  paste("An unexpected condition occurred.",
-        "Please report this bug to the authors of the irace package <http://iridia.ulb.ac.be/irace>")
-
 irace.print.memUsed <- function(objects)
 {
+  object.size.kb <- function (name, envir) {
+    object.size(get(name, envir = envir)) / 1024
+  }
+
   envir <- parent.frame()
   if (missing(objects)) {
     objects <- ls(envir = envir, all.names = TRUE)
   }
-  x <- sapply(objects, function(name)
-              object.size(get(name, envir = envir)) / 1024)
+  
+  x <- sapply(objects, object.size.kb, envir = envir)
 
-  objects <- ls(envir = .irace)
-  y <- sapply(objects, function(name)
-              object.size(get(name, envir = .irace)) / 1024)
+  y <- sapply(ls(envir = .irace, all.names = TRUE),
+              object.size.kb, envir = .irace)
   names(y) <- paste0(".irace$", names(y))
   x <- c(x, y)
 
@@ -35,6 +34,15 @@ irace.print.memUsed <- function(objects)
   x <- x[x > 32]
   cat(sep="", sprintf("%30s : %17.1f Kb\n", names(x), x))
   cat(sep="", sprintf("%30s : %17.1f Mb\n", "Total", sum(x) / 1024))
+  # This does garbage collection and also prints memory used by R.
+  cat(sep="", sprintf("%30s : %17.1f Mb\n", "gc", sum(gc()[,2])))
+}
+
+# Print a user-level warning message, when the calling context
+# cannot help the user to understand why the program failed.
+irace.warning <- function(...)
+{
+  cat(sep="", "WARNING: ", ..., "\n")
 }
 
 # Print a user-level fatal error message, when the calling context
@@ -64,35 +72,56 @@ irace.dump.frames <- function()
 
   if (!is.null(execDir)) setwd(cwd)
   # We need this to signal an error in R CMD check.
-  q("no", status = 1, runLast = FALSE)  
+  if (!interactive()) q("no", status = 1, runLast = FALSE)
 }
 
-irace.assert <- function(exp)
+# Print an internal fatal error message that signals a bug in irace.
+irace.internal.error <- function(...)
 {
-  if (exp) return(invisible())
-  mc <- match.call()[[2]]
-  msg <- paste(deparse(mc), " is not TRUE\n", .irace.bug.report, sep = "")
-  # FIXME: It would be great if we could save into a file the state of
-  # the function that called this one.
-  traceback(1)
+  .irace.bug.report <-
+    paste0("An unexpected condition occurred. ",
+           "Please report this bug to the authors of the irace package <http://iridia.ulb.ac.be/irace>")
+
   op <- options(warning.length = 8170,
                 error = if (interactive()) utils::recover
                         else irace.dump.frames)
   on.exit(options(op))
-  stop (msg)
+  # 6 to not show anything below irace.assert()
+  bt <- capture.output(traceback(6))
+  warnings()
+  stop (.irace.prefix, paste0(..., collapse = "\n"),
+        paste0(bt, collapse= "\n"), "\n",
+        .irace.prefix, "\n", .irace.bug.report, call. = FALSE)
+  invisible()
+}
+
+irace.assert <- function(exp, eval.after = NULL)
+{
+  # FIXME: It would be great if we could save into a file the state of
+  # the function that called this one.
+  if (exp) return(invisible())
+  mc <- match.call()[[2]]
+  msg <- paste0(deparse(mc), " is not TRUE\n")
+  if (!is.null(eval.after)) {
+    msg.after <- eval.parent(capture.output(eval.after))
+    msg <- paste0(msg, "\n", msg.after)
+  }
+  irace.internal.error(msg)
   invisible()
 }
 
 irace.note <- function(...)
 {
   cat ("# ", format(Sys.time(), usetz=TRUE), ": ",
-       paste(..., sep = "", collapse = ""), sep = "")
+       paste0(..., collapse = ""), sep = "")
 }
 
 file.check <- function (file, executable = FALSE, readable = executable,
+                        writeable = FALSE,
                         isdir = FALSE, notempty = FALSE, text = NULL)
 {
   EXEC <- 1 # See documentation of the function file.access()
+  WRITE <- 2
   READ <- 4
 
   if (!is.character(file) || is.null.or.empty(file)) {
@@ -104,9 +133,22 @@ file.check <- function (file, executable = FALSE, readable = executable,
   ## must remain.
   
   if (!file.exists(file)) {
+    if (writeable) {
+      if (tryCatch({ suppressWarnings(file.create(file) && file.remove(file)) },
+                   error=function(e) FALSE))
+        return(TRUE)
+      irace.error("cannot create ", text, " ", shQuote(file))
+      return (FALSE)
+    }
     irace.error (text, " '", file, "' does not exist")
     return(FALSE)
   }
+
+  if (writeable && (file.access(file, mode = WRITE) != 0)) {
+    irace.error(text, " '", file, "' cannot be written into")
+    return(FALSE)
+  }
+  
   if (readable && (file.access(file, mode = READ) != 0)) {
     irace.error(text, " '", file, "' is not readable")
     return (FALSE)
@@ -136,19 +178,46 @@ file.check <- function (file, executable = FALSE, readable = executable,
 round.to.next.multiple <- function(x, d)
   return(x + d - 1 - (x - 1) %% d)
 
+# This returns FALSE for Inf/-Inf/NA
 is.wholenumber <- function(x, tol = .Machine$double.eps^0.5)
 {
-  abs(x - round(x)) < tol
+  is.finite(x) & (abs(x - round(x)) < tol)
+}
+
+is.na.nowarn <- function(x)
+{
+  length(x) == 1 && suppressWarnings(is.na(x))
+}
+
+is.na.or.empty <- function(x)
+{
+  (length(x) == 0) || is.na.nowarn(x)
 }
 
 is.null.or.na <- function(x)
 {
-  is.null(x) || (length(x) == 1 && suppressWarnings(is.na(x)))
+  is.null(x) || is.na.nowarn(x)
 }
 
 is.null.or.empty <- function(x)
 {
-  is.null(x) || (length(x) == 1 && is.character(x) && x == "")
+  (length(x) == 0) || (length(x) == 1 && !suppressWarnings(is.na(x)) && is.character(x) && x == "")
+}
+
+is.function.name <- function(FUN)
+{
+  # FIXME: Is there a simpler way to do this check?
+  is.function(FUN) ||
+    (!is.null(FUN) && !is.na(FUN) && as.character(FUN) != "" &&
+     !is.null(get.function(FUN)))
+}
+
+get.function <- function(FUN)
+{
+  if (is.function(FUN)) return(FUN)
+  FUN <- dynGet(as.character(FUN), ifnotfound = NULL, inherits = TRUE)
+  if (is.function(FUN)) return(FUN)
+  return (NULL)
 }
 
 is.bytecode <- function(x) typeof(x) == "bytecode"
@@ -156,7 +225,18 @@ is.bytecode <- function(x) typeof(x) == "bytecode"
 bytecompile <- function(x)
 {
   if (is.bytecode(x)) return(x)
-  else return(compiler::cmpfun(x))
+  return(compiler::cmpfun(x))
+}
+
+# FIXME: Use stringr function and replace this function
+str_sub <- function(x, start=0, stop=nchar(x))
+{
+  negs <- start < 0
+  if (any(negs)) start[negs] <- nchar(x[negs]) + 1  - start[negs]
+
+  negs <- stop < 0
+  if (any(negs)) stop[negs] <- nchar(x[negs]) + 1  - stop[negs]
+  return(substr(x, start, stop))
 }
 
 strcat <- function(...)
@@ -275,14 +355,34 @@ path.rel2abs <- function (path, cwd = getwd())
   return (irace.normalize.path(path))
 }
 
-is.function.name <- function(FUN)
+#' Update filesystem paths of a scenario consistently.
+#'
+#' This function should be used to change the filesystem paths stored in a
+#' scenario object. Useful when moving a scenario from one computer to another.
+#'
+#' @template arg_scenario
+#' @param from character string containing a regular expression (or character
+#'   string for \code{fixed = TRUE}) to be matched.
+#' @param to the replacement string.character string. For \code{fixed = FALSE}
+#'   this can include backreferences \code{"\1"} to \code{"\9"} to
+#'   parenthesized subexpressions of \code{from}.
+#' @param fixed logical.  If \code{TRUE}, \code{from} is a string to be matched
+#'   as is.
+#' @return The updated scenario
+#' @examples
+#' \dontrun{
+#' scenario <- readScenario(filename = "scenario.txt")
+#' scenario <- scenario.update.paths(scenario, from = "/home/manuel/", to = "/home/leslie")
+#' }
+#' @seealso \code{\link[base]{grep}}
+#' @export
+scenario.update.paths <- function(scenario, from, to, fixed = TRUE)
 {
-  # FIXME: Is there a simpler way to do this check?
-  is.function(FUN) ||
-  (!is.null(FUN) && !is.na(FUN) && as.character(FUN) != "" &&
-   !is.null(mget(as.character(FUN), envir = as.environment(-1),
-                 mode = "function", ifnotfound = list(NULL),
-                 inherits = TRUE)[[1]]))
+  pathParams <- .irace.params.def[.irace.params.def[, "type"] == "p", "name"]
+  # Only consider the ones that actually appear in scenario.
+  pathParams <- intersect(pathParams, names(scenario))
+  scenario[pathParams] <- lapply(scenario[pathParams], sub, pattern = from, replacement = to, fixed = fixed)
+  return(scenario)
 }
 
 # This function is used to trim potentially large strings for printing, since
@@ -293,6 +393,17 @@ strlimit <- function(str, limit = 5000)
     return(paste0(substr(str, 1, limit - 3), "..."))
   }
   return(str)
+}
+
+test.type.order.str <- function(test.type)
+{
+  return (switch(test.type,
+                 friedman = "sum of ranks",
+                 t.none =, # Fall-throught
+                 t.holm =, # Fall-throught
+                 t.bonferroni = "mean value",
+                 irace.internal.error ("test.type.order.str() Invalid value '",
+                                       test.type, "' of test.type")))
 }
 
 trim.leading <- function(str)
@@ -361,6 +472,8 @@ merge.matrix <- function(x, y)
                     dimnames = list(new.rows, colnames(x))))
   # Update
   x[rownames(y), colnames(y)] <- y
+  # There must be a non-NA entry for each instance.
+  irace.assert(all(apply(!is.na(x), 1, any)))
   return(x)
 }
 
@@ -382,6 +495,24 @@ extractElites <- function(configurations, nbElites)
   return (elites)
 }
 
+#' removeConfigurationsMetaData
+#'
+#' Remove the columns with "metadata" of a matrix containing some
+#' configuration configurations. These "metadata" are used internaly
+#' by \pkg{irace}. This function can be used e.g. before printing
+#' the configurations, to output only the values for the parameters
+#' of the configuration without data possibly useless to the user.
+#'   
+#' @template arg_configurations
+#' 
+#' @return The same matrix without the "metadata".
+#'    
+#' @seealso 
+#'   \code{\link{configurations.print.command}} to print the configurations as command lines.
+#'   \code{\link{configurations.print}} to print the configurations as a data frame.
+#' 
+#' @author Manuel López-Ibáñez and Jérémie Dubois-Lacoste
+#' @export
 ## Keep only parameters values
 removeConfigurationsMetaData <- function(configurations)
 {
@@ -390,28 +521,57 @@ removeConfigurationsMetaData <- function(configurations)
                      drop = FALSE])
 }
 
-configurations.print <- function(configuration, metadata = FALSE)
+#' Print configurations as a data frame
+#' 
+#' @template arg_configurations
+#' @param metadata A Boolean specifying whether to print the metadata or
+#' not. The metadata are data for the configurations (additionally to the
+#' value of each parameter) used by \pkg{irace}.
+#' 
+#' @return None.
+#'
+#' @seealso
+#'  \code{\link{configurations.print.command}} to print the configurations as command-line strings.
+#' 
+#' @author Manuel López-Ibáñez and Jérémie Dubois-Lacoste
+#' @export
+configurations.print <- function(configurations, metadata = FALSE)
 {
-  rownames(configuration) <- configuration$.ID.
+  rownames(configurations) <- configurations$.ID.
   if (!metadata) {
-    configuration <- removeConfigurationsMetaData(configuration)
+    configurations <- removeConfigurationsMetaData(configurations)
   } 
-  print(as.data.frame(configuration, stringsAsFactors = FALSE))
+  print(as.data.frame(configurations, stringsAsFactors = FALSE), digits = 15)
 }
 
-configurations.print.command <- function(configuration, parameters)
+#' Print configurations as command-line strings.
+#' 
+#' Prints configurations after converting them into a representation for the
+#' command-line.
+#' 
+#' @template arg_configurations
+#' @template arg_parameters
+#' 
+#' @return None.
+#'
+#' @seealso
+#'  \code{\link{configurations.print}} to print the configurations as a data frame.
+#' 
+#' @author Manuel López-Ibáñez and Jérémie Dubois-Lacoste
+#' @export
+configurations.print.command <- function(configurations, parameters)
 {
-  if (nrow(configuration) <= 0) return(invisible())
-  ids <- as.numeric(configuration$.ID.)
-  configuration <- removeConfigurationsMetaData(configuration)
+  if (nrow(configurations) <= 0) return(invisible())
+  ids <- as.numeric(configurations$.ID.)
+  configurations <- removeConfigurationsMetaData(configurations)
   # Re-sort the columns
-  configuration <- configuration[, parameters$names, drop = FALSE]
+  configurations <- configurations[, parameters$names, drop = FALSE]
   # A better way to do this? We cannot use apply() because that coerces
   # to a character matrix thus messing up numerical values.
   len <- nchar(max(ids))
-  for (i in seq_len (nrow(configuration))) {
+  for (i in seq_len (nrow(configurations))) {
     cat(sprintf("%-*d %s\n", len, ids[i],
-                buildCommandLine(configuration[i, , drop=FALSE], parameters$switches)))
+                buildCommandLine(configurations[i, , drop=FALSE], parameters$switches)))
   }
 }
 
@@ -525,7 +685,7 @@ concordance <- function(data)
 #       data: matrix with the data, instances in rows (judges), configurations
 #             in columns.
 # Returns: variance value [0,1], where 0 is a homogeneous set of instances and 
-#          1 is a heterogeneous set. 
+#          1 is a heterogeneous set.
 dataVariance <- function(data)
 {
   irace.assert (is.matrix(data) && is.numeric(data))
@@ -556,7 +716,7 @@ dataVariance <- function(data)
 
 runcommand <- function(command, args, id, debugLevel)
 {
-  if (debugLevel >= 2) {
+  if (debugLevel >= 2L) {
     irace.note (command, " ", args, "\n")
     elapsed <- proc.time()["elapsed"]
   }
@@ -570,20 +730,22 @@ runcommand <- function(command, args, id, debugLevel)
                err <<- c(err, paste(conditionMessage(w), collapse="\n"))
                invokeRestart("muffleWarning")
              })
+  if (is.null(output))
+    output <- ""
   # If the command could not be run an R error is generated.  If ‘command’
   # runs but gives a non-zero exit status this will be reported with a
   # warning and in the attribute ‘"status"’ of the result: an attribute
   # ‘"errmsg"’ may also be available.
   if (!is.null(err)) {
-    err <- paste(err, collapse ="\n")
+    err <- paste(err, collapse = "\n")
     if (!is.null(attr(output, "errmsg")))
-      output <- paste(sep = "\n", attr(output, "errmsg"))
-    if (debugLevel >= 2)
+      err <- paste(sep = "\n", err, attr(output, "errmsg"))
+    if (debugLevel >= 2L)
       irace.note ("ERROR (", id, "): ", err, "\n")
     return(list(output = output, error = err))
   }
-  if (debugLevel >= 2) {
-    irace.note ("DONE (", id, ") Elapsed: ",
+  if (debugLevel >= 2L) {
+    irace.note ("DONE (", id, ") Elapsed wall-clock seconds: ",
                 formatC(proc.time()["elapsed"] - elapsed,
                         format = "f", digits = 2), "\n")
   }
@@ -592,3 +754,43 @@ runcommand <- function(command, args, id, debugLevel)
 
 # Safe sampling of vector: 
 resample <- function(x, ...) x[sample.int(length(x), ...)]
+
+# Rounds up the number x to the specified number of decimal places 'digits'.
+ceiling.digits <- function(x, digits)
+{
+   multiple <- 10^-digits
+   div <- x / multiple
+   int_div <- trunc(div)
+   return (int_div * multiple + ceiling(div - int_div) * multiple)
+}
+
+# ceil.decimal <- function(x, d) { 
+  # # get the significant digits in the integer part.
+  # ssd <- x * 10^(d)
+  # # get the non significant digits
+  # nsd <- ssd - floor(ssd)
+
+  # ssd <- trunc(ssd)
+  # sel <- nsd > 0 | ssd==0
+  # ssd[sel] <- ssd[sel] + 1
+  # x2 <- ssd/10^(d)
+  # return(x2)
+# }
+
+is.file.extension <- function(filename, ext)
+{
+  return(substring(filename, nchar(filename) + 1 - nchar(ext)) == ext)
+}
+
+# Same as !(x %in% table)
+"%!in%" <- function (x, table) match(x, table, nomatch = 0L) == 0L
+
+irace_save_logfile <- function(iraceResults, scenario)
+{
+  if (is.null.or.empty(scenario$logFile)) return(invisible())
+  cwd <- setwd(scenario$execDir)
+  # FIXME: Use saveRDS
+  # FIXME: Bump to version=3 when we bump the minimum R version to >=3.6
+  save (iraceResults, file = scenario$logFile, version = 2)
+  setwd (cwd)
+}

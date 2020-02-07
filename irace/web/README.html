@@ -52,9 +52,10 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 <div id="TOC">
 <ul>
 <li><a href="#irace-iterated-racing-for-automatic-algorithm-configuration"><strong>irace</strong>: Iterated Racing for Automatic Algorithm Configuration</a></li>
-<li><a href="#introduction">Introduction</a></li>
+<li><a href="#introduction">Introduction</a><ul>
 <li><a href="#requisites">Requisites</a></li>
 <li><a href="#user-guide">User guide</a></li>
+</ul></li>
 <li><a href="#installing-r">Installing R</a><ul>
 <li><a href="#gnulinux">GNU/Linux</a></li>
 <li><a href="#os-x">OS X</a></li>
@@ -68,16 +69,19 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 <li><a href="#many-tuning-runs-in-parallel">Many tuning runs in parallel</a></li>
 <li><a href="#parallelize-one-tuning">Parallelize one tuning</a></li>
 </ul></li>
+<li><a href="#license">License</a></li>
 <li><a href="#frequently-asked-questions">Frequently Asked Questions</a></li>
 </ul>
 </div>
 <hr />
 <h1 id="irace-iterated-racing-for-automatic-algorithm-configuration"><strong>irace</strong>: Iterated Racing for Automatic Algorithm Configuration</h1>
-<p><a href="https://CRAN.R-project.org/package=irace"><img src="http://www.r-pkg.org/badges/version-last-release/irace" alt="CRAN_Status_Badge" /></a> <a href="https://CRAN.R-project.org/package=irace"><img src="http://cranlogs.r-pkg.org/badges/grand-total/irace" alt="CRAN Downloads" /></a></p>
+<p><a href="https://cran.r-project.org/package=irace"><img src="https://www.r-pkg.org/badges/version-last-release/irace" alt="CRAN Status" /></a> <a href="https://CRAN.R-project.org/package=irace"><img src="https://cranlogs.r-pkg.org/badges/grand-total/irace" alt="CRAN Downloads" /></a></p>
+<p>[ <a href="http://iridia.ulb.ac.be/irace/"><strong>Homepage</strong></a> ] [ <a href="https://cran.r-project.org/package=irace/vignettes/irace-package.pdf"><strong>User Guide (PDF)</strong></a> ]</p>
 <p><strong>Maintainers:</strong> <a href="http://lopez-ibanez.eu">Manuel L&#243;pez-Ib&#225;&#241;ez</a>, Leslie P&#233;rez C&#225;ceres</p>
 <p><strong>Creators:</strong> <a href="http://lopez-ibanez.eu">Manuel L&#243;pez-Ib&#225;&#241;ez</a>, J&#233;r&#233;mie Dubois-Lacoste</p>
 <p><strong>Contributors:</strong> J&#233;r&#233;mie Dubois-Lacoste, Thomas St&#252;tzle, Mauro Birattari, Eric Yuan and Prasanna Balaprakash.</p>
 <p><strong>Contact:</strong> <a href="https://groups.google.com/d/forum/irace-package" class="uri">https://groups.google.com/d/forum/irace-package</a></p>
+<hr />
 <h1 id="introduction">Introduction</h1>
 <p>The <strong>irace</strong> package implements the Iterated Race method, which is a generalization of the Iterated F-race method for the automatic configuration of optimization algorithms, that is, the tuning of their parameters by finding the most appropriate settings given a set of instances of an optimization problem. It builds upon the race package by Birattari and it is implemented in R.</p>
 <p><strong>Keywords:</strong> automatic configuration, offline tuning, parameter tuning, racing, F-race.</p>
@@ -87,11 +91,11 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 <li><p>Manuel L&#243;pez-Ib&#225;&#241;ez, J&#233;r&#233;mie Dubois-Lacoste, Thomas St&#252;tzle, and Mauro Birattari. <a href="http://iridia.ulb.ac.be/IridiaTrSeries/IridiaTr2011-004.pdf">The irace package, Iterated Race for Automatic Algorithm Configuration</a>. Technical Report TR/IRIDIA/2011-004, IRIDIA, Universit&#233; libre de Bruxelles, Belgium, 2011.<br> [ <a href="http://iridia.ulb.ac.be/~manuel/LopezIbanez_bib.html#LopDubStu2011irace">bibtex</a> | <a href="http://iridia.ulb.ac.be/IridiaTrSeries/IridiaTr2011-004.pdf">PDF</a> ]</p></li>
 <li><p>Manuel L&#243;pez-Ib&#225;&#241;ez. <a href="http://iridia.ulb.ac.be/irace/files/irace-comex-tutorial.pdf">The irace software package: A tutorial</a>. COMEX Workshop on Practical Automatic Algorithm Configuration, 2014.<br> [ <a href="http://iridia.ulb.ac.be/~manuel/comex_workshop/">workshop webpage</a> | <a href="http://iridia.ulb.ac.be/irace/files/irace-comex-tutorial.pdf">PDF</a> ]</p></li>
 </ol>
-<h1 id="requisites">Requisites</h1>
+<h2 id="requisites">Requisites</h2>
 <ul>
 <li>R (<a href="https://www.r-project.org" class="uri">https://www.r-project.org</a>) is required for running irace, but you don't need to know the R language to use it. Versions that work: &gt;= 2.15.0</li>
 </ul>
-<h1 id="user-guide">User guide</h1>
+<h2 id="user-guide">User guide</h2>
 <p>A complete <a href="https://cran.r-project.org/package=irace/vignettes/irace-package.pdf">user guide</a> comes with the package. You can access it online or, after installing the irace package, invoking from R the following command:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">        R&gt;<span class="st"> </span><span class="kw">vignette</span>(<span class="st">&quot;irace-package&quot;</span>)</code></pre></div>
 <p>The following is a quick-start guide. The user guide gives more detailed instructions.</p>
@@ -110,7 +114,7 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 <h2 id="windows">Windows</h2>
 <p>You can install R from a CRAN mirror (<a href="https://cran.r-project.org/bin/windows/" class="uri">https://cran.r-project.org/bin/windows/</a>). Once R is installed, you can launch the R console and install the irace package from it. See instructions below.</p>
 <h1 id="installing-the-irace-package">Installing the irace package</h1>
-<p>Install the <a href="http://iridia.ulb.ac.be/irace">irace</a> R package on your computer. There are two methods:</p>
+<p>There are two methods for installing the <a href="http://iridia.ulb.ac.be/irace">irace</a> R package on your computer:</p>
 <ol style="list-style-type: decimal">
 <li><p>Install within R (automatic download):</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">    $<span class="st"> </span>R
@@ -131,15 +135,18 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
     R&gt;<span class="st"> </span><span class="kw">library</span>(irace)
     R&gt;<span class="st"> </span><span class="kw">system.file</span>(<span class="dt">package=</span><span class="st">&quot;irace&quot;</span>)
     [<span class="dv">1</span>] <span class="st">&quot;~/R/irace&quot;</span></code></pre></div>
+<p>The last command tells you the installation directory of <code>irace</code>.</p>
 <h2 id="gnulinux-and-os-x">GNU/Linux and OS X</h2>
-<p>The last command tells you the installation directory of <code>irace</code>. Save that path to a variable, and add it to your <code>.bash_profile</code>, <code>.bashrc</code> or <code>.profile</code>:</p>
+<p>Save the installation directory of <code>irace</code> to a variable, and add it to your <code>.bash_profile</code>, <code>.bashrc</code> or <code>.profile</code>:</p>
 <div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash">    <span class="kw">export</span> <span class="ot">IRACE_HOME=</span>~/R/irace/ <span class="co"># Path given by system.file(package=&quot;irace&quot;)</span>
     <span class="kw">export</span> <span class="ot">PATH=${IRACE_HOME}</span>/bin/:<span class="ot">$PATH</span>
     <span class="co"># export R_LIBS=~/R:${R_LIBS} # Only if local installation was forced</span></code></pre></div>
 <p>After adding this and opening a new terminal, you should be able to invoke <code>irace</code> as follows:</p>
 <div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash">    $ <span class="kw">irace</span> --help</code></pre></div>
 <h2 id="windows-1">Windows</h2>
-<p>Unfortunately, the command-line wrapper does not work in Windows. To launch irace, you need to open the R console and execute:</p>
+<p>If the installation directory of <code>irace</code> is <code>C:/R/irace/</code>, you can invoke <code>irace</code> by opening a terminal (launch the program <code>cmd.exe</code>) and executing:</p>
+<div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash">    <span class="kw">C</span>:<span class="dt">\&gt;</span> C:\R\irace\bin\irace.bat --help</code></pre></div>
+<p>You can also launch irace by opening the R console and executing:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">    R&gt;<span class="st"> </span><span class="kw">library</span>(irace)
     R&gt;<span class="st"> </span><span class="kw">irace.cmdline</span>(<span class="st">&quot;--help&quot;</span>)</code></pre></div>
 <h1 id="usage">Usage</h1>
@@ -161,7 +168,7 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 <li>In <code>scenario.txt</code>, uncomment and assign only the parameters for which you need a value different than the default one.</li>
 </ul>
 <p>There are examples in <code>$IRACE_HOME/examples/</code>.</p></li>
-<li><p>Put the instances in <code>~/tuning/Instances/</code>. In addition, you can create a file that specifies which instances from that directory should be run and which instance-specific parameters to use. See <code>scenario.txt.tmpl</code> and <code>instances-list.tmpl</code> for examples. The command irace will not attempt to create the execution directory (execDir), so it must exist before calling irace. The default execDir is the current directory.</p></li>
+<li><p>Put the instances in <code>~/tuning/Instances/</code>. In addition, you can create a file that specifies which instances from that directory should be run and which instance-specific parameters to use. See <code>scenario.txt.tmpl</code> and <code>instances-list.tmpl</code> for examples. The command irace will not attempt to create the execution directory (<code>execDir</code>), so it must exist before calling irace. The default <code>execDir</code> is the current directory.</p></li>
 <li><p>Calling the command:</p>
 <div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash">    $ <span class="kw">cd</span> ~/tuning/ <span class="kw">&amp;&amp;</span> <span class="ot">$IRACE_HOME</span><span class="kw">/bin/irace</span></code></pre></div>
 <p>performs one run of Iterated Race. See the output of <code>irace --help</code> for additional irace parameters. Command-line parameters override the scenario setup specified in the <code>scenario.txt</code> file.</p></li>
@@ -174,6 +181,15 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 <p>Check the help of <code>parallel-irace</code> by running it without parameters.</p>
 <h2 id="parallelize-one-tuning">Parallelize one tuning</h2>
 <p>A single run of irace can be done much faster by executing the calls to <code>targetRunner</code> (the runs of the algorithm being tuned) in parallel. See the <a href="https://cran.r-project.org/package=irace/vignettes/irace-package.pdf">user guide</a> for the details.</p>
+<h1 id="license">License</h1>
+<p>This software is Copyright (C) 2011-2017 Manuel L&#243;pez-Ib&#225;&#241;ez and J&#233;r&#233;mie Dubois-Lacoste.</p>
+<p>This program is free software (software libre); you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.</p>
+<p>This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the <a href="https://cran.r-project.org/web/licenses/GPL-3">GNU General Public License</a> for more details.</p>
+<p><strong>IMPORTANT NOTE:</strong> Please be aware that the fact that this program is released as Free Software does not excuse you from scientific propriety, which obligates you to give appropriate credit! If you write a scientific paper describing research that made substantive use of this program, it is your obligation as a scientist to (a) mention the fashion in which this software was used in the Methods section; (b) mention the algorithm in the References section. The appropriate citation is:</p>
+<blockquote>
+<p>Manuel L&#243;pez-Ib&#225;&#241;ez, J&#233;r&#233;mie Dubois-Lacoste, Leslie P&#233;rez C&#225;ceres, Thomas St&#252;tzle, and Mauro Birattari. <a href="http://dx.doi.org/10.1016/j.orp.2016.09.002"><strong>The irace package: Iterated Racing for Automatic Algorithm Configuration.</strong></a> <em>Operations Research Perspectives</em>, 2016.</p>
+</blockquote>
+<p>The race package is Copyright (C) 2003 Mauro Birattari, used under the GPL.</p>
 <h1 id="frequently-asked-questions">Frequently Asked Questions</h1>
 <p>The <a href="https://cran.r-project.org/package=irace/vignettes/irace-package.pdf">user guide</a> contains a list of frequently asked questions.</p>
 <!--
