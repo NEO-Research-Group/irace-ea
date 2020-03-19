@@ -761,6 +761,20 @@ irace <- function(scenario, parameters)
           verbose = FALSE)
 
   
+  
+  library(raster)
+  # CHRISTIAN: Variables to use JADE
+  if (scenario$ealgorithm == "JADE") {
+    configurations.colnames <- c(".ID.", names(parameters$conditions), ".PARENT.", "CR", "Fscale")
+    JADEparams.A  <-
+      as.data.frame(matrix(ncol = length(configurations.colnames),
+                           nrow = 0,
+                           dimnames = list(NULL, configurations.colnames)))
+    jadeNewConfigurations  <-
+      as.data.frame(matrix(ncol = length(configurations.colnames),
+                           nrow = 0,
+                           dimnames = list(NULL, configurations.colnames)))
+  }
   while (TRUE) {
     # Recovery info 
     iraceResults$state <- list(.Random.seed = get(".Random.seed", .GlobalEnv),
@@ -954,12 +968,29 @@ irace <- function(scenario, parameters)
       if (debugLevel >= 1) {
         irace.note("Sample ", nbNewConfigurations, " configurations from model\n")
       }
-      newConfigurations <- sampleModel(parameters, eliteConfigurations,
-                                       model, nbNewConfigurations,
-                                       digits = scenario$digits,
-                                       forbidden = forbiddenExps,
-                                       repair = scenario$repairConfiguration)
-
+      if (is.na(scenario$ealgorithm)){
+        # Normal behaviour
+        newConfigurations <- sampleModel(parameters, eliteConfigurations,
+                                         model, nbNewConfigurations,
+                                         digits = scenario$digits,
+                                         forbidden = forbiddenExps,
+                                         repair = scenario$repairConfiguration)
+      } else {
+        # Evolutive irace
+        newConfigurations <- sampleModelEA(parameters, eliteConfigurations,
+                                           model, nbNewConfigurations,
+                                           digits = scenario$digits,
+                                           scenario = scenario,
+                                           forbidden = forbiddenExps,
+                                           repair = scenario$repairConfiguration,
+                                           solSet = JADEparams.A) # CHRISTIAN: TODO: generalize this solution set
+      }
+      # Save configuration to JADE archive
+      if (scenario$ealgorithm == "JADE") {
+        jadeNewConfigurations <- newConfigurations	
+        drops <- c("CR", "Fscale")	
+        newConfigurations <- newConfigurations[ , !(names(newConfigurations) %in% drops)]
+      }
       # Set ID of the new configurations.
       newConfigurations <- cbind (.ID. = max(0, allConfigurations$.ID.) +
                                     1:nrow(newConfigurations), newConfigurations)
@@ -982,11 +1013,30 @@ irace <- function(scenario, parameters)
           if (debugLevel >= 2) { printModel (model) }
           # Re-sample after restart like above
           #cat("# ", format(Sys.time(), usetz=TRUE), " sampleModel()\n")
-          newConfigurations <- sampleModel(parameters, eliteConfigurations,
-                                           model, nbNewConfigurations,
-                                           digits = scenario$digits,
-                                           forbidden = forbiddenExps,
-                                           repair = scenario$repairConfiguration)
+          
+          if (is.na(scenario$ealgorithm)){
+            # Normal behaviour
+            newConfigurations <- sampleModel(parameters, eliteConfigurations,
+                                             model, nbNewConfigurations,
+                                             digits = scenario$digits,
+                                             forbidden = forbiddenExps,
+                                             repair = scenario$repairConfiguration)
+          } else {
+            # Evolutive irace
+            newConfigurations <- sampleModelEA(parameters, eliteConfigurations,
+                                               model, nbNewConfigurations,
+                                               digits = scenario$digits,
+                                               scenario = scenario,
+                                               forbidden = forbiddenExps,
+                                               repair = scenario$repairConfiguration,
+                                               solSet = JADEparams.A) # CHRISTIAN: TODO: generalize this solution set
+          }
+          # Save configuration to JADE archive
+          if (scenario$ealgorithm == "JADE") {
+            jadeNewConfigurations <- newConfigurations	
+            drops <- c("CR", "Fscale")	
+            newConfigurations <- newConfigurations[ , !(names(newConfigurations) %in% drops)]
+          }
           #cat("# ", format(Sys.time(), usetz=TRUE), " sampleModel() DONE\n")
           # Set ID of the new configurations.
           newConfigurations <- cbind (.ID. = max(0, allConfigurations$.ID.) + 
@@ -1089,6 +1139,34 @@ irace <- function(scenario, parameters)
     configurations.print(eliteConfigurations, metadata = debugLevel >= 1)
     iraceResults$iterationElites <- c(iraceResults$iterationElites, eliteConfigurations$.ID.[1])
     iraceResults$allElites[[indexIteration]] <- eliteConfigurations$.ID.
+    
+    # Update JADE variables
+    if (scenario$ealgorithm == "JADE") {
+      # The original JADE only store in the archive if there is an improvement.
+      # Here, we store in the archive if the remain in the elite set.
+      
+      # Get the new configuration that become elites
+      eliteSelected <- jadeNewConfigurations[jadeNewConfigurations$.ID. %in% eliteConfigurations$.ID., ]
+      
+      cJade <- scenario$cJade
+      # Update mean F and mean CR
+      if(nrow(eliteSelected) > 0) {
+        JADEparams.A <- rbind(JADEparams.A, eliteSelected)
+        for (e in 1:nrow(eliteSelected)) {
+          irace.assert("CR" %in% colnames(eliteSelected))
+          conf.CR <- eliteSelected[e,][["CR"]]
+          conf.F <- eliteSelected[e,][["Fscale"]]
+          
+          # FIXME: Check the update function
+          # calculate mu F
+          JADEparams.muF <- (1-cJade) * conf.F + cJade * (sum(JADEparams.A$Fscale^2)/sum(JADEparams.A$Fscale))
+          # calculate mu CR
+          JADEparams.muCR <- (1-cJade) * conf.CR + cJade * mean(JADEparams.A$CR) # meanA
+          scenario$muF <- JADEparams.muF
+          scenario$muCR <- JADEparams.muCR
+        }
+      }
+    }
     
     if (firstRace) {
       if (debugLevel >= 1)  { irace.note("Initialise model\n") }

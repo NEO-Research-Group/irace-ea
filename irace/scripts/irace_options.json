@@ -612,5 +612,105 @@
       "section": "General options",
       "description": "Enable/disable AClib mode. This option enables compatibility with GenericWrapper4AC as targetRunner script.",
       "vignettes": "Enable/disable AClib mode. This option enables compatibility with \\texttt{GenericWrapper4AC} (\\url{https://github.com/automl/GenericWrapper4AC/}) as \\parameter{targetRunner} script."
+  },
+  {
+      "name": "ealgorithm",
+      "type": "s",
+      "short": "-ea",
+      "long": "--ealgorithm",
+      "default": null,
+      "section": "Evolutionary Algorithms",
+      "description": "Select the evolutionary algorithm to run the sampling.",
+      "vignettes": "Select the evolutionary algorithm to run the sampling. The options are (GA, DE, JADE)"
+  },
+  {
+      "name": "deF",
+      "type": "r",
+      "short": "-deF",
+      "long": "--ea-de-f",
+      "default": 0.5,
+      "section": "Evolutionary Algorithms",
+      "description": "F paramenter of the differential evolution crossover DE/best/1/bin.",
+      "vignettes": "F paramenter of the differential evolution crossover DE/best/1/bin."
+  },
+  {
+      "name": "deCR",
+      "type": "r",
+      "short": "-deCR",
+      "long": "--ea-de-cr",
+      "default": 0.5,
+      "section": "Evolutionary Algorithms",
+      "description": "CR paramenter of the differential evolution crossover DE/best/1/bin.",
+      "vignettes": "CR paramenter of the differential evolution crossover DE/best/1/bin."
+  },
+  {
+      "name": "muF",
+      "type": "r",
+      "short": "-deF",
+      "long": "--ea-de-f",
+      "default": 0.5,
+      "section": "Evolutionary Algorithms",
+      "description": "Initial paramenter F of the algorithm JADE: Adaptive Differential Evolution With Optional External Archive.",
+      "vignettes": "Initial paramenter F of the algorithm JADE: Adaptive Differential Evolution With Optional External Archive."
+  },
+  {
+      "name": "muCR",
+      "type": "r",
+      "short": "-jadeCR",
+      "long": "--ea-jade-cr",
+      "default": 0.5,
+      "section": "Evolutionary Algorithms",
+      "description": "Initial paramenter CR of the algorithm JADE: Adaptive Differential Evolution With Optional External Archive.",
+      "vignettes": "Initial paramenter CR of the algorithm JADE: Adaptive Differential Evolution With Optional External Archive."
+  },
+  {
+      "name": "cJade",
+      "type": "r",
+      "short": "-jadeC",
+      "long": "--ea-jade-c",
+      "default": 0.5,
+      "section": "Evolutionary Algorithms",
+      "description": "Paramenter c of the algorithm JADE: Adaptive Differential Evolution With Optional External Archive.",
+      "vignettes": "Paramenter c of the algorithm JADE: Adaptive Differential Evolution With Optional External Archive."
+  },
+  {
+      "name": "probCross",
+      "type": "r",
+      "short": "-gaProbCross",
+      "long": "--ea-ga-cross-prob",
+      "default": 0.5,
+      "section": "Evolutionary Algorithms",
+      "description": "Probability of perform a crossover.",
+      "vignettes": "Probability of perform a crossover."
+  },
+  {
+      "name": "crossParam",
+      "type": "r",
+      "short": "",
+      "long": "--ea-ga-cross-param",
+      "default": 0.5,
+      "section": "Evolutionary Algorithms",
+      "description": "Parameter of crossover.",
+      "vignettes": "Parameter of crossover."
+  },
+  {
+      "name": "probMut",
+      "type": "r",
+      "short": "-gaProbMut",
+      "long": "--ea-ga-mut-prob",
+      "default": 0.1,
+      "section": "Evolutionary Algorithms",
+      "description": "Probability of perform a mutation.",
+      "vignettes": "Probability of perform a mutation."
+  },
+  {
+      "name": "mutParam",
+      "type": "i",
+      "short": "",
+      "long": "--ea-ga-mut-param",
+      "default": 20,
+      "section": "Evolutionary Algorithms",
+      "description": "Parameter of mutation.",
+      "vignettes": "Parameter of mutation."
   }
 ]
