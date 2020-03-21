@@ -38,5 +38,5 @@ URL: http://iridia.ulb.ac.be/irace
 ByteCompile: yes
 LazyData: yes
 Encoding: UTF-8
-RoxygenNote: 6.1.1
+RoxygenNote: 7.0.2
 SystemRequirements: GNU make

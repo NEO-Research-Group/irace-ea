@@ -274,3 +274,37 @@ File containing a list of test instances and, optionally, additional parameters 
 Enable/disable testing the elite configurations found at each iteration.
 
 \end{description}
+
+\subsection[Evolutionary Algorithms]{Evolutionary Algorithms}
+\begin{description}
+ \defparameter[ea]{ealgorithm}{ealgorithm}{}%
+Select the evolutionary algorithm to run the sampling. The options are (GA, DE, JADE)
+
+ \defparameter[deF]{deF}{ea-de-f}{0.5}%
+F paramenter of the differential evolution crossover DE/best/1/bin.
+
+ \defparameter[deCR]{deCR}{ea-de-cr}{0.5}%
+CR paramenter of the differential evolution crossover DE/best/1/bin.
+
+ \defparameter[deF]{muF}{ea-de-f}{0.5}%
+Initial paramenter F of the algorithm JADE: Adaptive Differential Evolution With Optional External Archive.
+
+ \defparameter[jadeCR]{muCR}{ea-jade-cr}{0.5}%
+Initial paramenter CR of the algorithm JADE: Adaptive Differential Evolution With Optional External Archive.
+
+ \defparameter[jadeC]{cJade}{ea-jade-c}{0.5}%
+Paramenter c of the algorithm JADE: Adaptive Differential Evolution With Optional External Archive.
+
+ \defparameter[gaProbCross]{probCross}{ea-ga-cross-prob}{0.5}%
+Probability of perform a crossover.
+
+ \defparameter{crossParam}{ea-ga-cross-param}{0.5}%
+Parameter of crossover.
+
+ \defparameter[gaProbMut]{probMut}{ea-ga-mut-prob}{0.1}%
+Probability of perform a mutation.
+
+ \defparameter{mutParam}{ea-ga-mut-param}{20}%
+Parameter of mutation.
+
+\end{description}

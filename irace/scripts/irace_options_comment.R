@@ -93,5 +93,18 @@
 #'      \item{\code{testNbElites}}{Number of elite configurations returned by irace that will be tested if test instances are provided. (Default: \code{1})}
 #'      \item{\code{testIterationElites}}{Enable/disable testing the elite configurations found at each iteration. (Default: \code{0})}
 #'    }
+#'  \item Evolutionary Algorithms:
+#'    \describe{
+#'      \item{\code{ealgorithm}}{Select the evolutionary algorithm to run the sampling. (Default: \code{NA})}
+#'      \item{\code{deF}}{F paramenter of the differential evolution crossover DE/best/1/bin. (Default: \code{0.5})}
+#'      \item{\code{deCR}}{CR paramenter of the differential evolution crossover DE/best/1/bin. (Default: \code{0.5})}
+#'      \item{\code{muF}}{Initial paramenter F of the algorithm JADE: Adaptive Differential Evolution With Optional External Archive. (Default: \code{0.5})}
+#'      \item{\code{muCR}}{Initial paramenter CR of the algorithm JADE: Adaptive Differential Evolution With Optional External Archive. (Default: \code{0.5})}
+#'      \item{\code{cJade}}{Paramenter c of the algorithm JADE: Adaptive Differential Evolution With Optional External Archive. (Default: \code{0.5})}
+#'      \item{\code{probCross}}{Probability of perform a crossover. (Default: \code{0.5})}
+#'      \item{\code{crossParam}}{Parameter of crossover. (Default: \code{0.5})}
+#'      \item{\code{probMut}}{Probability of perform a mutation. (Default: \code{0.1})}
+#'      \item{\code{mutParam}}{Parameter of mutation. (Default: \code{20})}
+#'    }
 #' }
 # __IRACE_OPTIONS__END__

@@ -22,7 +22,7 @@ A data frame with the set of best algorithm configurations found by \pkg{irace}.
 The data frame has the following columns:
 \itemize{
 \item \code{.ID.} : Internal id of the candidate configuration.
-\item \code{Parameter names} : One column per parameter name in \code{parameters}.
+\item \verb{Parameter names} : One column per parameter name in \code{parameters}.
 \item \code{.PARENT.} : Internal id of the parent candidate configuration.
 }
 
@@ -63,7 +63,7 @@ instances as rows. Column names correspond to the internal identifier of
 the configuration (\code{allConfigurations$.ID.}).}
 
 \item{\code{experimentLog}}{A matrix with columns \code{iteration},
-\code{instance, }configuration, \code{time}.  This matrix contains the log of all the
+\verb{instance, }configuration, \code{time}.  This matrix contains the log of all the
 experiments that \pkg{irace} performs during its execution.  The
 instance column refers to the index of the \code{scenario$instancesList}
 data frame. Time is saved ONLY when reported by the \code{targetRunner}.}

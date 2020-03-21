@@ -1,1 +1,6 @@
-irace.version <- "2.3.1801M"
+#' irace.version
+#'
+#' A character string containing the version of \pkg{irace}.
+#'
+#' @export
+irace.version <- '3.4.1801M'

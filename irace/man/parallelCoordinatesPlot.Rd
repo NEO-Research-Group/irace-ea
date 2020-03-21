@@ -4,9 +4,15 @@
 \alias{parallelCoordinatesPlot}
 \title{parallelCoordinatesPlot}
 \usage{
-parallelCoordinatesPlot(configurations, parameters,
-  param_names = parameters$names, hierarchy = TRUE, filename = NULL,
-  pdf.width = 14, mar = c(8, 1, 4, 1))
+parallelCoordinatesPlot(
+  configurations,
+  parameters,
+  param_names = parameters$names,
+  hierarchy = TRUE,
+  filename = NULL,
+  pdf.width = 14,
+  mar = c(8, 1, 4, 1)
+)
 }
 \arguments{
 \item{configurations}{(\code{data.frame}) \cr Parameter configurations of the

@@ -4,8 +4,15 @@
 \alias{parameterFrequency}
 \title{Plot of histogram of parameter values}
 \usage{
-parameterFrequency(configurations, parameters, rows = 4, cols = 3,
-  filename = NULL, pdf.width = 12, col = "gray")
+parameterFrequency(
+  configurations,
+  parameters,
+  rows = 4,
+  cols = 3,
+  filename = NULL,
+  pdf.width = 12,
+  col = "gray"
+)
 }
 \arguments{
 \item{configurations}{(\code{data.frame}) \cr Parameter configurations of the
