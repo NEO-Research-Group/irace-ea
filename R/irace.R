@@ -516,9 +516,9 @@ allConfigurationsInit <- function(scenario, parameters)
 
 generate_new <- function(scenario, parameters, eliteConfigurations, model,
                          nbNewConfigurations,
-                         forbidden = forbiddenExps)
+                         forbiddenExps)
 {
-  if (is.null(irace$ea_variation)) {
+  if (is.null(.irace$ea_variation)) {
    return (sampleModel(parameters, eliteConfigurations,
                        model, nbNewConfigurations,
                        digits = scenario$digits,
@@ -1028,12 +1028,9 @@ irace <- function(scenario, parameters)
       if (debugLevel >= 1) {
         irace.note("Sample ", nbNewConfigurations, " configurations from model\n")
       }
-      newConfigurations <- generateNewConfigurat(parameters, eliteConfigurations,
+      newConfigurations <- generate_new(scenario, parameters, eliteConfigurations,
                                        model, nbNewConfigurations,
-                                       digits = scenario$digits,
-                                       forbidden = forbiddenExps,
-                                       repair = scenario$repairConfiguration)
-
+                                       forbiddenExps)
       # Set ID of the new configurations.
       newConfigurations <- cbind (.ID. = max(0, allConfigurations$.ID.) +
                                     1:nrow(newConfigurations), newConfigurations)
@@ -1057,11 +1054,9 @@ irace <- function(scenario, parameters)
           if (debugLevel >= 2) { printModel (model) }
           # Re-sample after restart like above
           #cat("# ", format(Sys.time(), usetz=TRUE), " sampleModel()\n")
-          newConfigurations <- sampleModel(parameters, eliteConfigurations,
+          newConfigurations <- generate_new(scenario, parameters, eliteConfigurations,
                                            model, nbNewConfigurations,
-                                           digits = scenario$digits,
-                                           forbidden = forbiddenExps,
-                                           repair = scenario$repairConfiguration)
+                                           forbiddenExps)
           #cat("# ", format(Sys.time(), usetz=TRUE), " sampleModel() DONE\n")
           # Set ID of the new configurations.
           newConfigurations <- cbind (.ID. = max(0, allConfigurations$.ID.) + 

@@ -128,7 +128,7 @@ get_parents <- function(parameters, eliteConfigurations, numParents,
 
 # Sampling process with evolutionary operators
 ea_generate <- function (parameters, eliteConfigurations,
-                         nbConfigurations, digits, 
+                         nbNewConfigurations, digits, 
                          forbidden = NULL, repair = NULL)
 {
   if (nbNewConfigurations <= 0) {
