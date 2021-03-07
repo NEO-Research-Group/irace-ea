@@ -514,6 +514,25 @@ allConfigurationsInit <- function(scenario, parameters)
   return(allConfigurations)
 }
 
+generate_new <- function(scenario, parameters, eliteConfigurations, model,
+                         nbNewConfigurations,
+                         forbidden = forbiddenExps)
+{
+  if (is.null(irace$ea_variation)) {
+   return (sampleModel(parameters, eliteConfigurations,
+                       model, nbNewConfigurations,
+                       digits = scenario$digits,
+                       forbidden = forbiddenExps,
+                       repair = scenario$repairConfiguration))
+  } else {
+    return (ea_generate(parameters, eliteConfigurations,
+                        nbNewConfigurations,
+                        digits = scenario$digits,
+                        forbidden = forbiddenExps,
+                        repair = scenario$repairConfiguration))
+  }
+}
+
 #' irace
 #'
 #' \code{irace} implements iterated Race. It receives some parameters to be tuned 
@@ -1009,7 +1028,7 @@ irace <- function(scenario, parameters)
       if (debugLevel >= 1) {
         irace.note("Sample ", nbNewConfigurations, " configurations from model\n")
       }
-      newConfigurations <- sampleModel(parameters, eliteConfigurations,
+      newConfigurations <- generateNewConfigurat(parameters, eliteConfigurations,
                                        model, nbNewConfigurations,
                                        digits = scenario$digits,
                                        forbidden = forbiddenExps,

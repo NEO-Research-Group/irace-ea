@@ -128,9 +128,9 @@ sampleUniform <- function (parameters, nbConfigurations, digits,
   return (newConfigurations)
 }
 
-# To be called the first time before the second race (with indexIter =
-# 2) Nb configurations is the number of configurations at the end
-# included the elite ones obtained from the previous iteration
+# To be called the first time before the second race (with indexIter = 2) Nb
+# configurations is the number of configurations at the end included the elite
+# ones obtained from the previous iteration
 sampleModel <- function (parameters, eliteConfigurations, model,
                          nbNewConfigurations, digits, forbidden = NULL,
                          repair = NULL)

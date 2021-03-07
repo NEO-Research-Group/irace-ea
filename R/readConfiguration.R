@@ -328,6 +328,18 @@ readScenario <- function(filename = "", scenario = list())
   return (scenario)
 }
 
+setup_ea_variation <- function(scenario)
+{
+  if (scenario$ea_variation == "GA") {
+    return (GeneticAlgorithm$new(probCross = scenario$ga_cross_prob, crossParam = scenario$ga_cross_param,
+                                 probMut = scenario$ga_mut_prob, mutParam = scenario$ga_mut_param))
+  } else if (scenario$ea_variation == "DE") {
+    return (DifferentialEvolution$new(CR = scenario$de_cr, Fscale = scenario$de_fscale))
+  } else {
+    irace.assert(FALSE)
+  }
+}
+  
 setup_test_instances <- function(scenario)
 {
   if (is.null.or.empty(scenario[["testInstances"]])) {
@@ -684,12 +696,18 @@ checkScenario <- function(scenario = defaultScenario())
     scenario$boundMax <- NULL
   }
 
+  if (is.null.or.empty(scenario$ea_variation)) {
+    .irace$ea_variation <- NULL
+  } else {
+    check.valid.param("ea_variation", valid = c("DE", "GA"))
+    .irace$ea_variation <- setup_ea_variation(scenario)
+  }
+  
   if (is.null.or.empty(scenario$testType) || 
       is.null.or.na(scenario$testType)) {
     if (scenario$capping) scenario$testType <- "t-test"
     else scenario$testType <- "f-test"
   }
-  
   scenario$testType <-
     switch(tolower(scenario$testType),
            "f-test" =, # Fall-through
@@ -840,6 +858,16 @@ printScenario <- function(scenario)
 #'      \item{\code{testInstances}}{Character vector of the instances to be used in the \code{targetRunner} when executing the testing. (Default: \code{""})}
 #'      \item{\code{testNbElites}}{Number of elite configurations returned by irace that will be tested if test instances are provided. (Default: \code{1})}
 #'      \item{\code{testIterationElites}}{Enable/disable testing the elite configurations found at each iteration. (Default: \code{0})}
+#'    }
+#'  \item Evolutionary Algorithms:
+#'    \describe{
+#'      \item{\code{ea_variation}}{Select the evolutionary variation operator (DE or GA, default is none). (Default: \code{""})}
+#'      \item{\code{de_cr}}{CR paramenter of the differential evolution crossover DE/best/1/bin. (Default: \code{0.5})}
+#'      \item{\code{de_fscale}}{F-scale paramenter of the differential evolution crossover DE/best/1/bin. (Default: \code{0.5})}
+#'      \item{\code{ga_cross_prob}}{Probability of performing crossover. (Default: \code{0.5})}
+#'      \item{\code{ga_cross_param}}{Parameter of crossover. (Default: \code{0.5})}
+#'      \item{\code{ga_mut_prob}}{Probability of perform a mutation. (Default: \code{0.1})}
+#'      \item{\code{ga_mut_param}}{Parameter of mutation. (Default: \code{20})}
 #'    }
 #' }
 # __IRACE_OPTIONS__END__

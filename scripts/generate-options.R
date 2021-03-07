@@ -35,7 +35,8 @@ ordered.sections <- c("General options",
                       "Statistical test",
                       "Adaptive capping",
                       "Recovery",
-                      "Testing")
+                      "Testing",
+                      "Evolutionary Algorithms")
 sections <- unique(irace.params[,"section"])
 # All options must have a section.
 stopifnot(setequal(ordered.sections, sections))

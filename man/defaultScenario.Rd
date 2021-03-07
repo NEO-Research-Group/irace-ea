@@ -112,6 +112,16 @@ The scenario list contains the following elements:
      \item{\code{testNbElites}}{Number of elite configurations returned by irace that will be tested if test instances are provided. (Default: \code{1})}
      \item{\code{testIterationElites}}{Enable/disable testing the elite configurations found at each iteration. (Default: \code{0})}
    }
+ \item Evolutionary Algorithms:
+   \describe{
+     \item{\code{ea_variation}}{Select the evolutionary variation operator (DE or GA, default is none). (Default: \code{""})}
+     \item{\code{de_cr}}{CR paramenter of the differential evolution crossover DE/best/1/bin. (Default: \code{0.5})}
+     \item{\code{de_fscale}}{F-scale paramenter of the differential evolution crossover DE/best/1/bin. (Default: \code{0.5})}
+     \item{\code{ga_cross_prob}}{Probability of performing crossover. (Default: \code{0.5})}
+     \item{\code{ga_cross_param}}{Parameter of crossover. (Default: \code{0.5})}
+     \item{\code{ga_mut_prob}}{Probability of perform a mutation. (Default: \code{0.1})}
+     \item{\code{ga_mut_param}}{Parameter of mutation. (Default: \code{20})}
+   }
 }
 }
 \description{

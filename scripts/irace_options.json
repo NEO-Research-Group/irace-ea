@@ -620,7 +620,7 @@
     "long": "--postselection",
     "default": 0,
       "description": "Percentage of the configuration budget used to perform a postselection race of the best configurations of each iteration after the execution of irace.",
-        "vignettes": "Percentage of the configuration budget used to perform a postselection race of the best configurations of each iteration after the execution of \\irace. See \\autoref{sec:postselection}.",
+      "vignettes": "Percentage of the configuration budget used to perform a postselection race of the best configurations of each iteration after the execution of \\irace. See \\autoref{sec:postselection}.",
     "section": "General options"
   },
   {
@@ -632,5 +632,70 @@
       "section": "General options",
       "description": "Enable/disable AClib mode. This option enables compatibility with GenericWrapper4AC as targetRunner script.",
       "vignettes": "Enable/disable AClib mode. This option enables compatibility with \\texttt{GenericWrapper4AC} (\\url{https://github.com/automl/GenericWrapper4AC/}) as \\parameter{targetRunner} script."
+  },
+  {
+      "name": "ea_variation",
+      "type": "s",
+      "short": "",
+      "long": "--ea-variation",
+      "default": "",
+      "section": "Evolutionary Algorithms",
+      "description": "Select the evolutionary variation operator (DE or GA, default is none)."
+  },
+  {
+      "name": "de_cr",
+      "type": "r",
+      "short": "",
+      "long": "--de-cr",
+      "default": 0.5,
+      "section": "Evolutionary Algorithms",
+      "description": "CR paramenter of the differential evolution crossover DE/best/1/bin."
+  },
+  {
+      "name": "de_fscale",
+      "type": "r",
+      "short": "",
+      "long": "--de-fscale",
+      "default": 0.5,
+      "section": "Evolutionary Algorithms",
+      "description": "F-scale paramenter of the differential evolution crossover DE/best/1/bin."
+  },
+  {
+      "name": "ga_cross_prob",
+      "type": "r",
+      "short": "",
+      "long": "--ga-cross-prob",
+      "default": 0.5,
+      "section": "Evolutionary Algorithms",
+      "description": "Probability of performing crossover."
+  },
+  {
+      "name": "ga_cross_param",
+      "type": "r",
+      "short": "",
+      "long": "--ga-cross-param",
+      "default": 0.5,
+      "section": "Evolutionary Algorithms",
+      "description": "Parameter of crossover."
+  },
+  {
+      "name": "ga_mut_prob",
+      "type": "r",
+      "short": "",
+      "long": "--ga-mut-prob",
+      "default": 0.1,
+      "section": "Evolutionary Algorithms",
+      "description": "Probability of perform a mutation.",
+      "vignettes": "Probability of perform a mutation."
+  },
+  {
+      "name": "ga_mut_param",
+      "type": "i",
+      "short": "",
+      "long": "--ga-mut-param",
+      "default": 20,
+      "section": "Evolutionary Algorithms",
+      "description": "Parameter of mutation.",
+      "vignettes": "Parameter of mutation."
   }
 ]
