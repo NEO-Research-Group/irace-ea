@@ -130,18 +130,19 @@ printModel <- function (model)
 restartConfigurations <- function (configurations, restart.ids, model, parameters,
                                nbConfigurations, digits)
 {
-  #print(configurations)
+  print(configurations)
   tmp.ids <- c()
   for (param in parameters$names[!parameters$isFixed]) {
     for (id in restart.ids) {
       if (!(id %in% names(model[[param]]))) {
         id <- configurations[configurations$.ID. == id, ".PARENT."]
+        #id <- configurations[configurations$.ID. == id, ".ID."]
       }
       tmp.ids <- c(tmp.ids, id)
     }
   }
   restart.ids <- unique(tmp.ids)
-  #print(restart.ids)
+  print(restart.ids)
   for (param in parameters$names[!parameters$isFixed]) {
     type <- parameters$types[[param]]
     for (id in restart.ids) {

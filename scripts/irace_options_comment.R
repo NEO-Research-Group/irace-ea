@@ -104,6 +104,7 @@
 #'      \item{\code{ga_cross_param}}{Parameter of crossover. (Default: \code{0.5})}
 #'      \item{\code{ga_mut_prob}}{Probability of perform a mutation. (Default: \code{0.1})}
 #'      \item{\code{ga_mut_param}}{Parameter of mutation. (Default: \code{20})}
+#'      \item{\code{parameters_length}}{Parameter for two point crossover. (Default: \code{20})}
 #'    }
 #' }
 # __IRACE_OPTIONS__END__

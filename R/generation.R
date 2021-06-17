@@ -322,7 +322,9 @@ numeric_value_round <- function(type, value, lowerBound, upperBound, digits)
       value <- upperBound
   } else
     value <- round(value, digits)
-
+  
+  if (value < lowerBound) value <- lowerBound
+  if (value > upperBound) value <- upperBound
   irace.assert(value >= lowerBound && value <= upperBound)
   return (value)
 }

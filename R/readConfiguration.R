@@ -335,6 +335,9 @@ setup_ea_variation <- function(scenario)
                                  probMut = scenario$ga_mut_prob, mutParam = scenario$ga_mut_param))
   } else if (scenario$ea_variation == "DE") {
     return (DifferentialEvolution$new(CR = scenario$de_cr, Fscale = scenario$de_fscale))
+  } else if (scenario$ea_variation == "GAbinary") {
+    return (GeneticAlgorithmBinary$new(probCross = scenario$ga_cross_prob, crossParam = scenario$ga_cross_param,
+                                 probMut = scenario$ga_mut_prob, mutParam = scenario$ga_mut_param, scenario$parameters_length))
   } else {
     irace.assert(FALSE)
   }
@@ -699,7 +702,7 @@ checkScenario <- function(scenario = defaultScenario())
   if (is.null.or.empty(scenario$ea_variation)) {
     .irace$ea_variation <- NULL
   } else {
-    check.valid.param("ea_variation", valid = c("DE", "GA"))
+    check.valid.param("ea_variation", valid = c("DE", "GA", "GAbinary"))
     .irace$ea_variation <- setup_ea_variation(scenario)
   }
   

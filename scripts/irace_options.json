@@ -697,5 +697,15 @@
       "section": "Evolutionary Algorithms",
       "description": "Parameter of mutation.",
       "vignettes": "Parameter of mutation."
+  },
+  {
+      "name": "parameters_length",
+      "type": "i",
+      "short": "",
+      "long": "--parameters-length",
+      "default": 20,
+      "section": "Evolutionary Algorithms",
+      "description": "Parameter for two point crossover.",
+      "vignettes": "Parameter for two point crossover."
   }
 ]

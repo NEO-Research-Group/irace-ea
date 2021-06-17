@@ -1,4 +1,5 @@
 
+
 DifferentialEvolution <- R6::R6Class("DifferentialEvolution", cloneable=FALSE,
 public = list(
   type = "DE",
@@ -11,6 +12,7 @@ public = list(
       self$Fscale <- Fscale
   },
   next_children = function() {  },
+  next_cut_points = function() {  },
   
   variation = function(parents, domain = NULL) {
     irace.assert(length(parents) == self$num_parents)
@@ -43,17 +45,70 @@ public = list(
     self$do_crossover <- (runif(1) <= self$probCross)
     
   },
+  
+  next_cut_points = function() {  },
+  
   variation = function(parents, domain) {
     irace.assert(length(parents) == self$num_parents)
     p1 <- parents[1]
     p2 <- parents[2]
     # Crossover
-    newVal <- if (docrossover) crossover_uniform(p1, p2, self$crossParam) else p1
+    newVal <- crossover_uniform(p1, p2, self$crossParam)# else p1 #if (docrossover) crossover_uniform(p1, p2, self$crossParam) else p1
     # Mutation
     newVal <- if (runif(1) <= self$probMut) mutation_integerPolinomial(newVal, domain[1], domain[2], self$mutParam) else newVal
     return(newVal)
   }
 ))
+
+
+GeneticAlgorithmBinary <- R6::R6Class("EvolutionaryOperatorBinary", cloneable=FALSE,
+                                public = list(
+                                  type = "GA",
+                                  crossParam = NULL,
+                                  probCross = NULL,
+                                  probMut = NULL,
+                                  do_crossover = TRUE,
+                                  mutParam = NULL,
+                                  num_parents = 4,
+                                  cut_points = c(-1,-1),
+                                  idx = 0,
+                                  solution_lenght = NULL,
+                                  initialize = function(probCross, crossParam = 0.5, probMut, mutParam, length) {
+                                    self$probCross <- probCross
+                                    self$crossParam <- crossParam
+                                    self$probMut <- probMut
+                                    self$mutParam <- mutParam
+                                    self$solution_lenght <- length
+                                  },
+                                  next_children = function() {
+                                    self$do_crossover <- (runif(1) <= self$probCross)
+                                    
+                                  },
+                                  next_cut_points = function() {
+                                    self$cut_points[1] <- (runif(1)*self$solution_lenght)
+                                    self$cut_points[2] <- (runif(1)*self$solution_lenght)
+                                    if(self$cut_points[1]> self$cut_points[2]){
+                                      x <- self$cut_points[2]
+                                      self$cut_points[2] <- self$cut_points[1]
+                                      self$cut_points[1] <- x
+                                    }
+                                    self$idx = 0
+                                  },
+                                  variation = function(parents, domain, sel) {
+                                    irace.assert(length(parents) == self$num_parents)
+                                    p1 <- parents[1]
+                                    p2 <- parents[2]
+                                    # Crossover
+                                    newVal <- crossover_two_points(p1, p2, self$idx <= self$cut_points[1] || self$idx >= self$cut_points[2])# else p1 #if (docrossover) crossover_uniform(p1, p2, self$crossParam) else p1
+                                    self$idx <- self$idx + 1
+                                    # Mutation
+                                    bitVal <- number2binary(newVal)
+                                    bitVal <- mutation_bit_flip(bitVal, self$mutParam)
+                                    newVal <- binary2number(bitVal)
+                                    
+                                    return(newVal)
+                                  }
+                                ))
 
 
 # Evolutionary Operators --------------------------------------------------
@@ -78,6 +133,47 @@ jade <- function(X_base, X_r1, X_r2, X_best, CR, Fscale)
 crossover_uniform <- function(p1, p2, crossParam)
 {
   if (runif(1) <= crossParam) return(p1) else return(p2)
+}
+
+crossover_two_points <- function(p1, p2, choose_parent)
+{
+  if (choose_parent) return(p1) else return(p2)
+}
+
+mutation_bit_flip <- function(x, prob)
+{
+  library(bitops)
+  for (i in seq(length(x))) {
+    if (runif(1) <= prob) x[i] <- bitFlip(x[i],1)
+  }
+}
+
+number2binaryGeneral = function(number, noBits) {
+  library(bitops)
+  binary_vector = rev(as.numeric(intToBits(number)))
+  if(missing(noBits)) {
+     return(binary_vector)
+  } else {
+    binary_vector[-(1:(length(binary_vector) - noBits))]
+  }
+}
+number2binary = function(number) {
+  library(bitops)
+  # if (number == 0)
+  # {
+  #   return(0)
+  # }
+  # print("number2binary")
+  # print(number)
+  # print(floor(log2(number))+1)
+  # return(number2binaryGeneral(number, floor(log2(number))+1))
+  binary_vector = rev(as.numeric(intToBits(number)))
+  return(binary_vector)
+}
+
+binary2number<-function(x) {
+  library(bitops)
+  packBits(rev(c(rep(FALSE, 32-length(x)%%32), as.logical(x))), "integer")
 }
 
 mutation_integerPolinomial <- function(x, yl, yu, distributionIndex)
@@ -111,7 +207,8 @@ get_parents <- function(parameters, eliteConfigurations, numParents,
   indexEliteParent <- sample.int (n = nrow(eliteConfigurations), 
                                   size = min(numParents, nrow(eliteConfigurations)),
                                   prob = eliteConfigurations[[".WEIGHT."]])
-  parents <- eliteConfigurations[indexEliteParent, , drop = FALSE]
+  #parents <- eliteConfigurations[indexEliteParent, !names(eliteConfigurations) %in% c(".ID.", ".ALIVE.", ".RANK.", ".WEIGHT."), drop = FALSE]
+  parents <- eliteConfigurations[indexEliteParent, !names(eliteConfigurations) %in% c(".ALIVE.", ".RANK.", ".WEIGHT."), drop = FALSE]
   
   # Check if it is necessary generate new parent solutions
   extraSol <- max(numParents - nrow(eliteConfigurations), 0)
@@ -120,6 +217,11 @@ get_parents <- function(parameters, eliteConfigurations, numParents,
     # simply best configurations found previously?
     # Generate new parents configurations
     newConfigurationsAux <- sampleUniform(parameters, extraSol, digits, forbidden, repair)
+    newConfigurationsAux[[".ID."]] <- 0
+    print("names")
+    print(names(eliteConfigurations))
+    print(names(newConfigurationsAux))
+    print(names(parents))
     parents <- rbind(parents, newConfigurationsAux)
   }
   return(parents)
@@ -145,12 +247,18 @@ ea_generate <- function (parameters, eliteConfigurations,
   for (idxConfiguration in seq_len(nbNewConfigurations)) {
     forbidden.retries <- 0
     .irace$ea_variation$next_children()
+    .irace$ea_variation$next_cut_points()
     while (forbidden.retries < 100) {
       # Get the parents for the configuration
       numParents <- .irace$ea_variation$num_parents
       parents <- get_parents(parameters, eliteConfigurations, numParents, digits, forbidden, repair)
       configuration <- empty_configuration
-      configuration[[".PARENT."]] <- parents[1, ".ID."]
+      print(paste("configuration1: ", length(configuration), length(namesParameters) + 1, sep =' '))
+      #print(configuration)
+      padre <- parents[1, ".ID."]
+      if(is.null(padre) || is.na(padre)) padre <- 0
+      configuration[[".PARENT."]] <- padre
+      print(paste("configuration1: ", length(configuration), length(namesParameters) + 1, sep =' '))
       
       # Sample a value for every parameter of the new configuration.
       for (p in seq_along(namesParameters)) {
@@ -186,12 +294,16 @@ ea_generate <- function (parameters, eliteConfigurations,
         }
         configuration[[p]] <- newVal
       }
+      #print(paste("configuration1: ", length(configuration), sep =''))
       configuration <- as.data.frame(configuration, stringsAsFactors = FALSE)
       if (!is.null(repair)) {
         configuration <- repair(configuration, parameters, digits)
       }
       if (is.null(forbidden)
           || nrow(checkForbidden(configuration, forbidden)) == 1) {
+        #print(paste("configuration2: ", length(configuration), sep =''))
+        #print(configuration)
+        #configuration[[".PARENT."]] <- parents[1, ".ID."]
         newConfigurations[idxConfiguration,] <- configuration
         break
       }
