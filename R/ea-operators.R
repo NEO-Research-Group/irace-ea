@@ -1,114 +1,107 @@
-
-
 DifferentialEvolution <- R6::R6Class("DifferentialEvolution", cloneable=FALSE,
-public = list(
-  type = "DE",
-  num_parents = 4,
-  CR = NULL,
-  Fscale = NULL,
+  public = list(
+    type = "DE",
+    num_parents = 4,
+    CR = NULL,
+    Fscale = NULL,
 
-  initialize = function(CR, Fscale) {
+    initialize = function(CR, Fscale) {
       self$CR <- CR
       self$Fscale <- Fscale
-  },
-  next_children = function() {  },
-  next_cut_points = function() {  },
-  
-  variation = function(parents, domain = NULL) {
-    irace.assert(length(parents) == self$num_parents)
-    X_base <- parents[1]
-    X_r1 <- parents[2]
-    X_r2 <- parents[3]
-    X_r3 <- parents[4]
-    value <- DE_best_1_bin(X_base, X_r1, X_r2, X_r3, self$CR, self$Fscale)
-    return(value)
-  }
+    },
+    next_children = function() {  },
+      
+    variation = function(parents, domain = NULL) {
+      irace.assert(length(parents) == self$num_parents)
+      X_base <- parents[1]
+      X_r1 <- parents[2]
+      X_r2 <- parents[3]
+      X_r3 <- parents[4]
+      value <- DE_best_1_bin(X_base, X_r1, X_r2, X_r3, self$CR, self$Fscale)
+      return(value)
+    }
 ))
 
 GeneticAlgorithm <- R6::R6Class("EvolutionaryOperator", cloneable=FALSE,
-public = list(
-  type = "GA",
-  crossParam = NULL,
-  probCross = NULL,
-  probMut = NULL,
-  do_crossover = TRUE,
-  mutParam = NULL,
-  num_parents = 4,
+  public = list(
+    type = "GA",
+    crossParam = NULL,
+    probCross = NULL,
+    probMut = NULL,
+    do_crossover = TRUE,
+    mutParam = NULL,
+    num_parents = 4,
 
-  initialize = function(probCross, crossParam = 0.5, probMut, mutParam) {
+    initialize = function(probCross, crossParam = 0.5, probMut, mutParam) {
       self$probCross <- probCross
       self$crossParam <- crossParam
       self$probMut <- probMut
       self$mutParam <- mutParam
-  },
-  next_children = function() {
-    self$do_crossover <- (runif(1) <= self$probCross)
-    
-  },
+    },
+    next_children = function() {
+      self$do_crossover <- (runif(1) <= self$probCross)
+    },
   
-  next_cut_points = function() {  },
-  
-  variation = function(parents, domain) {
-    irace.assert(length(parents) == self$num_parents)
-    p1 <- parents[1]
-    p2 <- parents[2]
-    # Crossover
-    newVal <- crossover_uniform(p1, p2, self$crossParam)# else p1 #if (docrossover) crossover_uniform(p1, p2, self$crossParam) else p1
-    # Mutation
-    newVal <- if (runif(1) <= self$probMut) mutation_integerPolinomial(newVal, domain[1], domain[2], self$mutParam) else newVal
-    return(newVal)
-  }
+    variation = function(parents, domain) {
+      irace.assert(length(parents) == self$num_parents)
+      p1 <- parents[1]
+      p2 <- parents[2]
+      # Crossover
+      newVal <- crossover_uniform(p1, p2, self$crossParam)# else p1 #if (docrossover) crossover_uniform(p1, p2, self$crossParam) else p1
+      # Mutation
+      newVal <- if (runif(1) <= self$probMut) mutation_integerPolinomial(newVal, domain[1], domain[2], self$mutParam) else newVal
+      return(newVal)
+    }
 ))
 
 
 GeneticAlgorithmBinary <- R6::R6Class("EvolutionaryOperatorBinary", cloneable=FALSE,
-                                public = list(
-                                  type = "GA",
-                                  crossParam = NULL,
-                                  probCross = NULL,
-                                  probMut = NULL,
-                                  do_crossover = TRUE,
-                                  mutParam = NULL,
-                                  num_parents = 4,
-                                  cut_points = c(-1,-1),
-                                  idx = 0,
-                                  solution_lenght = NULL,
-                                  initialize = function(probCross, crossParam = 0.5, probMut, mutParam, length) {
-                                    self$probCross <- probCross
-                                    self$crossParam <- crossParam
-                                    self$probMut <- probMut
-                                    self$mutParam <- mutParam
-                                    self$solution_lenght <- length
-                                  },
-                                  next_children = function() {
-                                    self$do_crossover <- (runif(1) <= self$probCross)
-                                    
-                                  },
-                                  next_cut_points = function() {
-                                    self$cut_points[1] <- (runif(1)*self$solution_lenght)
-                                    self$cut_points[2] <- (runif(1)*self$solution_lenght)
-                                    if(self$cut_points[1]> self$cut_points[2]){
-                                      x <- self$cut_points[2]
-                                      self$cut_points[2] <- self$cut_points[1]
-                                      self$cut_points[1] <- x
-                                    }
-                                    self$idx = 0
-                                  },
-                                  variation = function(parents, domain, sel) {
-                                    irace.assert(length(parents) == self$num_parents)
-                                    p1 <- parents[1]
-                                    p2 <- parents[2]
-                                    # Crossover
-                                    newVal <- crossover_two_points(p1, p2, self$idx <= self$cut_points[1] || self$idx >= self$cut_points[2])# else p1 #if (docrossover) crossover_uniform(p1, p2, self$crossParam) else p1
-                                    self$idx <- self$idx + 1
-                                    # Mutation
-                                    bitVal <- number2binary(newVal)
-                                    bitVal <- mutation_bit_flip(bitVal, self$mutParam)
-                                    newVal <- binary2number(bitVal)
-                                    
-                                    return(newVal)
-                                  }
-                                ))
+  public = list(
+    type = "GA",
+    crossParam = NULL,
+    probCross = NULL,
+    probMut = NULL,
+    do_crossover = TRUE,
+    mutParam = NULL,
+    num_parents = 4,
+    cut_points = c(-1,-1),
+    idx = 0,
+    solution_lenght = NULL,
+    initialize = function(probCross, crossParam = 0.5, probMut, mutParam, length) {
+      self$probCross <- probCross
+      self$crossParam <- crossParam
+      self$probMut <- probMut
+      self$mutParam <- mutParam
+      self$solution_lenght <- length
+    },
+    next_children = function() {
+      self$do_crossover <- (runif(1) <= self$probCross)
+      # Next cut points for crossover
+      self$cut_points[1] <- (runif(1)*self$solution_lenght)
+      self$cut_points[2] <- (runif(1)*self$solution_lenght)
+      if(self$cut_points[1]> self$cut_points[2]){
+        x <- self$cut_points[2]
+        self$cut_points[2] <- self$cut_points[1]
+        self$cut_points[1] <- x
+      }
+      self$idx = 0
+    },
+    variation = function(parents, domain, sel) {
+      # Why do we need 4 parents?
+      irace.assert(length(parents) == self$num_parents)
+      p1 <- parents[1]
+      p2 <- parents[2]
+      # Crossover
+      newVal <- crossover_two_points(p1, p2, self$idx <= self$cut_points[1] || self$idx >= self$cut_points[2])# else p1 #if (docrossover) crossover_uniform(p1, p2, self$crossParam) else p1
+      self$idx <- self$idx + 1
+      # Mutation
+      bitVal <- number2binary(newVal)
+      bitVal <- mutation_bit_flip(bitVal, self$mutParam)
+      newVal <- binary2number(bitVal)
+      
+      return(newVal)
+    }
+  ))
 
 
 # Evolutionary Operators --------------------------------------------------
@@ -143,12 +136,18 @@ crossover_two_points <- function(p1, p2, choose_parent)
 mutation_bit_flip <- function(x, prob)
 {
   library(bitops)
+  # FIXME: This could be
+  # r <- runif(length(x))
+  # pos <- r <= prob
+  # x[pos] <- 1L - x[pos]
+  # return(x)
+  
   for (i in seq(length(x))) {
     if (runif(1) <= prob) x[i] <- bitFlip(x[i],1)
   }
 }
 
-number2binaryGeneral = function(number, noBits) {
+number2binaryGeneral <- function(number, noBits) {
   library(bitops)
   binary_vector = rev(as.numeric(intToBits(number)))
   if(missing(noBits)) {
@@ -157,7 +156,7 @@ number2binaryGeneral = function(number, noBits) {
     binary_vector[-(1:(length(binary_vector) - noBits))]
   }
 }
-number2binary = function(number) {
+number2binary <- function(number) {
   library(bitops)
   # if (number == 0)
   # {
@@ -247,7 +246,6 @@ ea_generate <- function (parameters, eliteConfigurations,
   for (idxConfiguration in seq_len(nbNewConfigurations)) {
     forbidden.retries <- 0
     .irace$ea_variation$next_children()
-    .irace$ea_variation$next_cut_points()
     while (forbidden.retries < 100) {
       # Get the parents for the configuration
       numParents <- .irace$ea_variation$num_parents
