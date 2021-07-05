@@ -95,9 +95,12 @@ GeneticAlgorithmBinary <- R6::R6Class("EvolutionaryOperatorBinary", cloneable=FA
       newVal <- crossover_two_points(p1, p2, self$idx <= self$cut_points[1] || self$idx >= self$cut_points[2])# else p1 #if (docrossover) crossover_uniform(p1, p2, self$crossParam) else p1
       self$idx <- self$idx + 1
       # Mutation
+      newVal <- newVal - domain[1] # to avoid negative numbers
       bitVal <- number2binary(newVal)
-      bitVal <- mutation_bit_flip(bitVal, self$mutParam)
+      rang <- floor(log(domain[2] - domain[1])/log(2)) + 1 # bits than mathers
+      bitVal <- mutation_bit_flip(bitVal, self$mutParam, rang)
       newVal <- binary2number(bitVal)
+      newVal <- newVal + domain[1]
       
       return(newVal)
     }
@@ -133,7 +136,7 @@ crossover_two_points <- function(p1, p2, choose_parent)
   if (choose_parent) return(p1) else return(p2)
 }
 
-mutation_bit_flip <- function(x, prob)
+mutation_bit_flip <- function(x, prob, rang)
 {
   library(bitops)
   # FIXME: This could be
@@ -142,7 +145,7 @@ mutation_bit_flip <- function(x, prob)
   # x[pos] <- 1L - x[pos]
   # return(x)
   
-  for (i in seq(length(x))) {
+  for (i in (length(x) - rang + 1):(length(x))) {
     if (runif(1) <= prob) x[i] <- bitFlip(x[i],1)
   }
 }
