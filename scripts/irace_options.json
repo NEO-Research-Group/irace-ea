@@ -707,10 +707,10 @@
       "vignettes": "Probability of perform a mutation."
   },
   {
-      "name": "sbx_eta",
+      "name": "pm_eta",
       "type": "i",
       "short": "",
-      "long": "--sbx-eta",
+      "long": "--pm-eta",
       "default": 20,
       "section": "Evolutionary Algorithms",
       "description": "eta parameter of polynomial mutation.",
