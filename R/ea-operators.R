@@ -55,6 +55,39 @@ GeneticAlgorithm <- R6::R6Class("EvolutionaryOperator", cloneable=FALSE,
 ))
 
 
+GeneticAlgorithmSBX <- R6::R6Class("EvolutionaryOperatorSBX", cloneable=FALSE,
+                                public = list(
+                                  type = "GASBX",
+                                  crossParam = NULL,
+                                  probCross = NULL,
+                                  probMut = NULL,
+                                  do_crossover = TRUE,
+                                  mutParam = NULL,
+                                  num_parents = 4,
+                                  
+                                  initialize = function(probCross, crossParam = 0.5, probMut, mutParam) {
+                                    self$probCross <- probCross
+                                    self$crossParam <- crossParam
+                                    self$probMut <- probMut
+                                    self$mutParam <- mutParam
+                                  },
+                                  next_children = function() {
+                                    self$do_crossover <- (runif(1) <= self$probCross)
+                                  },
+                                  
+                                  variation = function(parents, domain) {
+                                    irace.assert(length(parents) == self$num_parents)
+                                    p1 <- parents[1]
+                                    p2 <- parents[2]
+                                    # Crossover
+                                    newVal <- crossover_sbx(p1, p2, self$crossParam, domain)# else p1 #if (docrossover) crossover_uniform(p1, p2, self$crossParam) else p1
+                                    # Mutation
+                                    newVal <- if (runif(1) <= self$probMut) mutation_integerPolinomial(newVal, domain[1], domain[2], self$mutParam) else newVal
+                                    return(newVal)
+                                  }
+                                ))
+
+
 GeneticAlgorithmBinary <- R6::R6Class("EvolutionaryOperatorBinary", cloneable=FALSE,
   public = list(
     type = "GA",
@@ -135,6 +168,75 @@ crossover_two_points <- function(p1, p2, choose_parent)
 {
   if (choose_parent) return(p1) else return(p2)
 }
+
+crossover_sbx <- function(p1, p2, crossParam, domain)
+{
+  EPS = 1.0e-14
+  offspring = NULL
+  valueX1 = p1
+  valueX2 = p2
+  distributionIndex = 20
+  if (!is.null(crossParam)) {
+    distributionIndex = crossParam
+  }
+  
+  if (runif(1) <= 0.5) {
+    if (abs(valueX1 - valueX2) > EPS) {
+      y1 = NULL
+      y2 = NULL
+      if (valueX1 < valueX2) {
+        y1 = valueX1;
+        y2 = valueX2;
+      } else {
+        y1 = valueX2;
+        y2 = valueX1;
+      }
+      
+      lowerBound = domain[1]
+      upperBound = domain[2]
+      
+      rand = runif(1)
+      beta = 1.0 + (2.0 * (y1 - lowerBound) / (y2 - y1))
+      alpha = 2.0 - (beta ^ (-(distributionIndex + 1.0)))
+      betaq = NULL
+      
+      if (rand <= (1.0 / alpha)) {
+        betaq = (rand * alpha) ^((1.0 / (distributionIndex + 1.0)));
+      } else {
+        betaq = (1.0 / (2.0 - rand * alpha)) ^( 1.0 / (distributionIndex + 1.0));
+      }
+      c1 = 0.5 * (y1 + y2 - betaq * (y2 - y1));
+      
+      beta = 1.0 + (2.0 * (upperBound - y2) / (y2 - y1));
+      alpha = 2.0 - (beta^(-(distributionIndex + 1.0)))
+      
+      if (rand <= (1.0 / alpha)) {
+        betaq = (rand * alpha)^(1.0 / (distributionIndex + 1.0))
+      } else {
+        betaq = 1.0 / (2.0 - rand * alpha)^(1.0 / (distributionIndex + 1.0))
+      }
+      c2 = 0.5 * (y1 + y2 + betaq * (y2 - y1))
+      
+      
+      if (runif(1) <= 0.5) {
+        offspring = c2
+        # offspring.get(1).variables().set(i, c1)
+      } else {
+        offspring = c1
+        # offspring.get(1).variables().set(i, c2);
+      }
+    } else {
+      offspring = valueX1
+      # offspring.get(1).variables().set(i, valueX2);
+    }
+  } else {
+    offspring = valueX2
+    # offspring.get(1).variables().set(i, valueX1);
+  }
+
+  return(offspring)
+}
+
 
 mutation_bit_flip <- function(x, prob, rang)
 {
