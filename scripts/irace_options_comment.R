@@ -100,6 +100,8 @@
 #'      \item{\code{ea_variation}}{Select the evolutionary variation operator (DE or GA, default is none). (Default: \code{""})}
 #'      \item{\code{de_cr}}{CR paramenter of the differential evolution crossover DE/best/1/bin. (Default: \code{0.5})}
 #'      \item{\code{de_fscale}}{F-scale paramenter of the differential evolution crossover DE/best/1/bin. (Default: \code{0.5})}
+#'      \item{\code{crossover}}{Crossover operator. (Default: \code{"uniform"})}
+#'      \item{\code{mutation}}{Mutation operator. (Default: \code{"polynomial"})}
 #'      \item{\code{ga_cross_prob}}{Probability of performing crossover. (Default: \code{0.5})}
 #'      \item{\code{ga_cross_param}}{Parameter of crossover. (Default: \code{0.5})}
 #'      \item{\code{ga_mut_prob}}{Probability of perform a mutation. (Default: \code{0.1})}

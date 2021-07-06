@@ -661,6 +661,24 @@
       "description": "F-scale paramenter of the differential evolution crossover DE/best/1/bin."
   },
   {
+      "name": "crossover",
+      "type": "s",
+      "short": "",
+      "long": "--crossover",
+      "default": "uniform",
+      "section": "Evolutionary Algorithms",
+      "description": "Crossover operator."
+  },
+  {
+      "name": "mutation",
+      "type": "s",
+      "short": "",
+      "long": "--mutation",
+      "default": "polynomial",
+      "section": "Evolutionary Algorithms",
+      "description": "Mutation operator."
+  },
+  {
       "name": "ga_cross_prob",
       "type": "r",
       "short": "",
@@ -670,42 +688,31 @@
       "description": "Probability of performing crossover."
   },
   {
-      "name": "ga_cross_param",
+      "name": "sbx_eta",
       "type": "r",
       "short": "",
-      "long": "--ga-cross-param",
+      "long": "--sbx-eta",
       "default": 0.5,
       "section": "Evolutionary Algorithms",
-      "description": "Parameter of crossover."
+      "description": "Parameter of SBX."
   },
   {
       "name": "ga_mut_prob",
       "type": "r",
       "short": "",
       "long": "--ga-mut-prob",
-      "default": 0.1,
+      "default": 1.,
       "section": "Evolutionary Algorithms",
-      "description": "Probability of perform a mutation.",
+      "description": "Probability of mutation (actual probability is divided by the number of variable parameters).",
       "vignettes": "Probability of perform a mutation."
   },
   {
-      "name": "ga_mut_param",
+      "name": "sbx_eta",
       "type": "i",
       "short": "",
-      "long": "--ga-mut-param",
+      "long": "--sbx-eta",
       "default": 20,
       "section": "Evolutionary Algorithms",
-      "description": "Parameter of mutation.",
-      "vignettes": "Parameter of mutation."
-  },
-  {
-      "name": "parameters_length",
-      "type": "i",
-      "short": "",
-      "long": "--parameters-length",
-      "default": 20,
-      "section": "Evolutionary Algorithms",
-      "description": "Parameter for two point crossover.",
-      "vignettes": "Parameter for two point crossover."
+      "description": "eta parameter of polynomial mutation.",
   }
 ]

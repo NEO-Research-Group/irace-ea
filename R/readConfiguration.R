@@ -331,18 +331,13 @@ readScenario <- function(filename = "", scenario = list())
 setup_ea_variation <- function(scenario)
 {
   if (scenario$ea_variation == "GA") {
-    return (GeneticAlgorithm$new(probCross = scenario$ga_cross_prob, crossParam = scenario$ga_cross_param,
-                                 probMut = scenario$ga_mut_prob, mutParam = scenario$ga_mut_param))
+    return (GeneticAlgorithm$new(probCross = scenario$ga_cross_prob, crossParam = list(distributionIndex = scenario$sbx_eta),
+                                 probMut = scenario$ga_mut_prob, mutParam = list(distributionIndex = scenario$pm_eta),
+                                 crossover = scenario$crossover, mutation = scenario$mutation))
   } else if (scenario$ea_variation == "DE") {
     return (DifferentialEvolution$new(CR = scenario$de_cr, Fscale = scenario$de_fscale))
-  } else if (scenario$ea_variation == "GAbinary") {
-    return (GeneticAlgorithmBinary$new(probCross = scenario$ga_cross_prob, crossParam = scenario$ga_cross_param,
-                                 probMut = scenario$ga_mut_prob, mutParam = scenario$ga_mut_param, scenario$parameters_length))
-  } else if (scenario$ea_variation == "GASBX") {
-    return (GeneticAlgorithmSBX$new(probCross = scenario$ga_cross_prob, crossParam = scenario$ga_cross_param,
-                                 probMut = scenario$ga_mut_prob, mutParam = scenario$ga_mut_param))
-  } else {
-    irace.assert(FALSE)
+  }  else {
+    irace.error("Unknown EA")
   }
 }
   
@@ -870,10 +865,13 @@ printScenario <- function(scenario)
 #'      \item{\code{ea_variation}}{Select the evolutionary variation operator (DE or GA, default is none). (Default: \code{""})}
 #'      \item{\code{de_cr}}{CR paramenter of the differential evolution crossover DE/best/1/bin. (Default: \code{0.5})}
 #'      \item{\code{de_fscale}}{F-scale paramenter of the differential evolution crossover DE/best/1/bin. (Default: \code{0.5})}
+#'      \item{\code{crossover}}{Crossover operator. (Default: \code{"uniform"})}
+#'      \item{\code{mutation}}{Mutation operator. (Default: \code{"polynomial"})}
 #'      \item{\code{ga_cross_prob}}{Probability of performing crossover. (Default: \code{0.5})}
 #'      \item{\code{ga_cross_param}}{Parameter of crossover. (Default: \code{0.5})}
 #'      \item{\code{ga_mut_prob}}{Probability of perform a mutation. (Default: \code{0.1})}
 #'      \item{\code{ga_mut_param}}{Parameter of mutation. (Default: \code{20})}
+#'      \item{\code{parameters_length}}{Parameter for two point crossover. (Default: \code{20})}
 #'    }
 #' }
 # __IRACE_OPTIONS__END__

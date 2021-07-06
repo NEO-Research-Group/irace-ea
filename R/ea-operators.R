@@ -9,7 +9,7 @@ DifferentialEvolution <- R6::R6Class("DifferentialEvolution", cloneable=FALSE,
       self$CR <- CR
       self$Fscale <- Fscale
     },
-    next_children = function() {  },
+    next_children = function(...) invisible(),
       
     variation = function(parents, domain = NULL) {
       irace.assert(length(parents) == self$num_parents)
@@ -21,165 +21,109 @@ DifferentialEvolution <- R6::R6Class("DifferentialEvolution", cloneable=FALSE,
       return(value)
     }
 ))
+# polynomial mutation proposed by Agrawal and Deb
+# https://www.iitk.ac.in/kangal/papers/k2012016.pd
+# distributionIndex is eta
+mutation_polynomial <- function(y, yl, yu, distributionIndex)
+{
+  if (yl == yu) return(yl)
 
-GeneticAlgorithm <- R6::R6Class("EvolutionaryOperator", cloneable=FALSE,
+  irace.assert(yl < yu)
+  distributionIndex <- distributionIndex + 1.
+
+  delta1 <- (y - yl) / (yu - yl)
+  delta2 <- (yu - y) / (yu - yl)
+  rnd <- runif(1)
+  mutPow <- 1. / distributionIndex
+  if (rnd < 0.5) {
+    xy <- 1. - delta1
+    val <- 2. * rnd + (1. - 2. * rnd) * (xy^distributionIndex)
+    deltaq <- (val^mutPow) - 1.
+  } else {
+    xy <- 1. - delta2
+    val <- 2. * (1. - rnd) + 2. * (rnd - 0.5) * (xy^distributionIndex)
+    deltaq <- 1. - (val^mutPow)
+  }
+  y <- y + deltaq * (yu - yl)
+  y <- min(max(y, yl), yu)
+  return(y)
+}
+
+int2binary <- function(x, n_bits = 128) {
+  irace.assert(is.wholenumber(x))
+  x <- head(intToBits(as.integer(x)), n_bits)
+  as.integer(x)
+}
+
+# Precompute for speed.
+.powers_of_two <- 2L^(0L:63L)
+binary2int <- function(x) {
+  irace.assert(length(x) <= length(.powers_of_two))
+  sum(.powers_of_two[1:length(x)] * x)
+}
+
+binary_bitflip <- function(x, prob) ifelse(runif(length(x)) < prob, 1L - x, x)
+
+mutation_intbitflip <- function(x, lower, upper, prob)
+{
+  x <- x - lower # to avoid negative numbers
+  n_bits <- ceiling(log2(1 + upper - lower))
+  bitval <- int2binary(x, n_bits)
+  newval <- binary_bitflip(bitval, prob / n_bits)
+  x <- binary2int(newval)
+  x <- min(x + lower, upper) # It could happen that becomes larger than the maximum.
+  x
+}
+
+Mutation <- R6::R6Class("Mutation", cloneable=FALSE,
   public = list(
-    type = "GA",
-    crossParam = NULL,
-    probCross = NULL,
-    probMut = NULL,
-    do_crossover = TRUE,
-    mutParam = NULL,
-    num_parents = 4,
-
-    initialize = function(probCross, crossParam = 0.5, probMut, mutParam) {
-      self$probCross <- probCross
-      self$crossParam <- crossParam
-      self$probMut <- probMut
-      self$mutParam <- mutParam
+    probMut = 1.,
+    n_variables = 1.,
+    initialize = function(prob) {
+      irace.assert(prob >= 0 && prob <= 1)
+      self$probMut <- prob
     },
-    next_children = function() {
-      self$do_crossover <- (runif(1) <= self$probCross)
-    },
-  
-    variation = function(parents, domain) {
-      irace.assert(length(parents) == self$num_parents)
-      p1 <- parents[1]
-      p2 <- parents[2]
-      # Crossover
-      newVal <- crossover_uniform(p1, p2, self$crossParam)# else p1 #if (docrossover) crossover_uniform(p1, p2, self$crossParam) else p1
-      # Mutation
-      newVal <- if (runif(1) <= self$probMut) mutation_integerPolinomial(newVal, domain[1], domain[2], self$mutParam) else newVal
-      return(newVal)
+    next_children = function(n_variables) {
+      self$n_variables <- n_variables
     }
 ))
 
-
-GeneticAlgorithmSBX <- R6::R6Class("EvolutionaryOperatorSBX", cloneable=FALSE,
-                                public = list(
-                                  type = "GASBX",
-                                  crossParam = NULL,
-                                  probCross = NULL,
-                                  probMut = NULL,
-                                  do_crossover = TRUE,
-                                  mutParam = NULL,
-                                  num_parents = 4,
-                                  
-                                  initialize = function(probCross, crossParam = 0.5, probMut, mutParam) {
-                                    self$probCross <- probCross
-                                    self$crossParam <- crossParam
-                                    self$probMut <- probMut
-                                    self$mutParam <- mutParam
-                                  },
-                                  next_children = function() {
-                                    self$do_crossover <- (runif(1) <= self$probCross)
-                                  },
-                                  
-                                  variation = function(parents, domain) {
-                                    irace.assert(length(parents) == self$num_parents)
-                                    p1 <- parents[1]
-                                    p2 <- parents[2]
-                                    # Crossover
-                                    newVal <- crossover_sbx(p1, p2, self$crossParam, domain)# else p1 #if (docrossover) crossover_uniform(p1, p2, self$crossParam) else p1
-                                    # Mutation
-                                    newVal <- if (runif(1) <= self$probMut) mutation_integerPolinomial(newVal, domain[1], domain[2], self$mutParam) else newVal
-                                    return(newVal)
-                                  }
-                                ))
-
-
-GeneticAlgorithmBinary <- R6::R6Class("EvolutionaryOperatorBinary", cloneable=FALSE,
+PolynomialMutation <- R6::R6Class("PolynomialMutation", inherit = Mutation, cloneable=FALSE,
   public = list(
-    type = "GA",
-    crossParam = NULL,
-    probCross = NULL,
-    probMut = NULL,
-    do_crossover = TRUE,
-    mutParam = NULL,
-    num_parents = 4,
-    cut_points = c(-1,-1),
-    idx = 0,
-    solution_lenght = NULL,
-    initialize = function(probCross, crossParam = 0.5, probMut, mutParam, length) {
-      self$probCross <- probCross
-      self$crossParam <- crossParam
-      self$probMut <- probMut
-      self$mutParam <- mutParam
-      self$solution_lenght <- length
+    distributionIndex = 1., # MANUEL: What is the default?
+    initialize = function(probMut, distributionIndex) {
+      self$distributionIndex <- distributionIndex
+      super$initialize(probMut)
     },
-    next_children = function() {
-      self$do_crossover <- (runif(1) <= self$probCross)
-      # Next cut points for crossover
-      self$cut_points[1] <- (runif(1)*self$solution_lenght)
-      self$cut_points[2] <- (runif(1)*self$solution_lenght)
-      if(self$cut_points[1]> self$cut_points[2]){
-        x <- self$cut_points[2]
-        self$cut_points[2] <- self$cut_points[1]
-        self$cut_points[1] <- x
-      }
-      self$idx = 0
-    },
-    variation = function(parents, domain, sel) {
-      # Why do we need 4 parents?
-      irace.assert(length(parents) == self$num_parents)
-      p1 <- parents[1]
-      p2 <- parents[2]
-      # Crossover
-      newVal <- crossover_two_points(p1, p2, self$idx <= self$cut_points[1] || self$idx >= self$cut_points[2])# else p1 #if (docrossover) crossover_uniform(p1, p2, self$crossParam) else p1
-      self$idx <- self$idx + 1
-      # Mutation
-      newVal <- newVal - domain[1] # to avoid negative numbers
-      bitVal <- number2binary(newVal)
-      rang <- floor(log(domain[2] - domain[1])/log(2)) + 1 # bits than mathers
-      bitVal <- mutation_bit_flip(bitVal, self$mutParam, rang)
-      newVal <- binary2number(bitVal)
-      newVal <- newVal + domain[1]
-      
-      return(newVal)
+    
+    do = function(x, lower, upper) {
+      if (runif(1) >= self$probMut / self$n_variables) return(x)
+      mutation_polynomial(x, lower, upper, self$distributionIndex)
     }
-  ))
+))
+
+IntegerBitFlip <- R6::R6Class("IntegerBitFlip", inherit = Mutation, cloneable=FALSE,
+  public = list(
+    do = function(x, lower, upper) mutation_intbitflip(x, lower, upper, self$probMut / self$n_variables)
+))
+      
+get_mutation <- function(x, probMut, mutParam)
+  switch(x,
+         polynomial = PolynomialMutation$new(probMut, distributionIndex = mutParam[["distributionIndex"]]),
+         bitflip = IntegerBitFlip$new(probMut),
+         irace.error("Unknown mutation"))
 
 
-# Evolutionary Operators --------------------------------------------------
-
-DE_best_1_bin <- function(X_base, X_r1, X_r2, X_r3, CR, Fscale)
+crossover_sbx <- function(p1, p2, distributionIndex, domain)
 {
-  if (runif(1) <= CR)
-    return(X_r1 + Fscale * (X_r2 - X_r3)) # base reproduction
-  else
-    return(X_base)
-}
+  if (is.null(distributionIndex))
+    distributionIndex <- 20
 
-jade <- function(X_base, X_r1, X_r2, X_best, CR, Fscale)
-{
-  if (runif(1) <= CR)
-    return (X_base + Fscale*(X_best - X_base) + Fscale*(X_r1 - X_r2))
-  else
-    return(X_base)
-}
-
-# Process ONLY one parameter
-crossover_uniform <- function(p1, p2, crossParam)
-{
-  if (runif(1) <= crossParam) return(p1) else return(p2)
-}
-
-crossover_two_points <- function(p1, p2, choose_parent)
-{
-  if (choose_parent) return(p1) else return(p2)
-}
-
-crossover_sbx <- function(p1, p2, crossParam, domain)
-{
-  EPS = 1.0e-14
-  offspring = NULL
-  valueX1 = p1
-  valueX2 = p2
-  distributionIndex = 20
-  if (!is.null(crossParam)) {
-    distributionIndex = crossParam
-  }
-  
+  distributionIndex <- distributionIndex + 1
+  EPS <- 1.0e-14
+  offspring <- NULL
+  valueX1 <- p1
+  valueX2 <- p2
   if (runif(1) <= 0.5) {
     if (abs(valueX1 - valueX2) > EPS) {
       y1 = NULL
@@ -197,23 +141,23 @@ crossover_sbx <- function(p1, p2, crossParam, domain)
       
       rand = runif(1)
       beta = 1.0 + (2.0 * (y1 - lowerBound) / (y2 - y1))
-      alpha = 2.0 - (beta ^ (-(distributionIndex + 1.0)))
+      alpha = 2.0 - (beta ^ (-distributionIndex))
       betaq = NULL
       
       if (rand <= (1.0 / alpha)) {
-        betaq = (rand * alpha) ^((1.0 / (distributionIndex + 1.0)));
+        betaq = (rand * alpha) ^(1.0 / distributionIndex);
       } else {
-        betaq = (1.0 / (2.0 - rand * alpha)) ^( 1.0 / (distributionIndex + 1.0));
+        betaq = (1.0 / (2.0 - rand * alpha)) ^( 1.0 / distributionIndex);
       }
       c1 = 0.5 * (y1 + y2 - betaq * (y2 - y1));
       
       beta = 1.0 + (2.0 * (upperBound - y2) / (y2 - y1));
-      alpha = 2.0 - (beta^(-(distributionIndex + 1.0)))
+      alpha = 2.0 - (beta^(-distributionIndex))
       
       if (rand <= (1.0 / alpha)) {
-        betaq = (rand * alpha)^(1.0 / (distributionIndex + 1.0))
+        betaq = (rand * alpha)^(1.0 / distributionIndex)
       } else {
-        betaq = 1.0 / (2.0 - rand * alpha)^(1.0 / (distributionIndex + 1.0))
+        betaq = 1.0 / (2.0 - rand * alpha)^(1.0 / distributionIndex)
       }
       c2 = 0.5 * (y1 + y2 + betaq * (y2 - y1))
       
@@ -237,71 +181,125 @@ crossover_sbx <- function(p1, p2, crossParam, domain)
   return(offspring)
 }
 
-
-mutation_bit_flip <- function(x, prob, rang)
+# Process ONLY one parameter
+crossover_uniform <- function(p1, p2)
 {
-  library(bitops)
-  # FIXME: This could be
-  # r <- runif(length(x))
-  # pos <- r <= prob
-  # x[pos] <- 1L - x[pos]
-  # return(x)
-  
-  for (i in (length(x) - rang + 1):(length(x))) {
-    if (runif(1) <= prob) x[i] <- bitFlip(x[i],1)
-  }
+  if (runif(1) <= 0.5) return(p1) else return(p2)
 }
 
-number2binaryGeneral <- function(number, noBits) {
-  library(bitops)
-  binary_vector = rev(as.numeric(intToBits(number)))
-  if(missing(noBits)) {
-     return(binary_vector)
-  } else {
-    binary_vector[-(1:(length(binary_vector) - noBits))]
-  }
-}
-number2binary <- function(number) {
-  library(bitops)
-  # if (number == 0)
-  # {
-  #   return(0)
-  # }
-  # print("number2binary")
-  # print(number)
-  # print(floor(log2(number))+1)
-  # return(number2binaryGeneral(number, floor(log2(number))+1))
-  binary_vector = rev(as.numeric(intToBits(number)))
-  return(binary_vector)
-}
 
-binary2number<-function(x) {
-  library(bitops)
-  packBits(rev(c(rep(FALSE, 32-length(x)%%32), as.logical(x))), "integer")
-}
 
-mutation_integerPolinomial <- function(x, yl, yu, distributionIndex)
-{
-  y <- x
-  if (yl == yu) {
-    y = yl
-  } else {
-    delta1 <- (y - yl) / (yu - yl)
-    delta2 <- (yu - y) / (yu - yl)
-    rnd <- runif(1)
-    mutPow <- 1.0 / (distributionIndex + 1.0)
-    if (rnd <= 0.5) {
-      xy <- 1.0 - delta1
-      val <- 2.0 * rnd + (1.0 - 2.0 * rnd) * (xy^(distributionIndex + 1.0))
-      deltaq = (val^mutPow) - 1.0
-    } else {
-      xy <- 1.0 - delta2
-      val <- 2.0 * (1.0 - rnd) + 2.0 * (rnd - 0.5) * (xy^(distributionIndex + 1.0))
-      deltaq <- 1.0 - (val^mutPow)
+Crossover <- R6::R6Class("Crossover", cloneable=FALSE,
+  public = list(
+    probCross = 1,
+    do_crossover = TRUE,
+    initialize = function(probCross) {
+      irace.assert(probCross >= 0 && probCross <= 1)
+      self$probCross <- probCross
+    },
+    next_children = function(...) {
+      self$do_crossover <- (runif(1) <= self$probCross)
+    },
+    do = function(p1, p2, domain) {
+      if (self$do_crossover) return(self$apply(p1, p2, domain))
+      return(p1)
+    }    
+))
+
+
+SBX <- R6::R6Class("SBX", inherit = Crossover, cloneable=FALSE,
+ public = list(
+   distributionIndex = 20,
+   initialize = function(probCross, distributionIndex) {
+     self$distributionIndex <- distributionIndex
+     super$initialize(probCross)
+   },
+   apply = function(p1, p2, domain) crossover_sbx(p1,p2, self$distributionIndex, domain)
+))
+
+UniformCX <- R6::R6Class("UniformCX", inherit = Crossover, cloneable=FALSE,
+ public = list(
+   apply = function(p1, p2, ...) crossover_uniform(p1,p2)
+))
+
+TwoPoint <- R6::R6Class("TwoPoint", inherit = Crossover, cloneable=FALSE, 
+  public = list(
+    cut_points = c(-1,-1),
+    idx = 0,
+    
+    initialize = function(probCross) {
+      super$initialize(probCross)
+    },
+
+    next_children = function(n_variables, ...) {
+      self$cut_points <- sort(runif(2) * n_variables)
+      self$idx <- 0
+      super$next_children(...)
+    },
+        
+    apply = function(p1, p2, ...) {
+      if (self$idx <= self$cut_points[1] || self$idx >= self$cut_points[2])
+        value <- p1
+      else
+        value <- p2
+      self$idx <- self$idx + 1
+      return(value)
     }
-    y <- y + deltaq * (yu - yl)
-  }
-  return(y)
+))
+
+get_crossover <- function(x, probCross, crossParam)
+  switch(x,
+         uniform = UniformCX$new(probCross),
+         sbx = SBX$new(probCross, distributionIndex = crossParam[["distributionIndex"]]),
+         "2point" = TwoPoint$new(probCross),
+         irace.error("Unknown crossover"))
+
+
+GeneticAlgorithm <- R6::R6Class("EvolutionaryOperator", cloneable=FALSE,
+  public = list(
+    type = "GA",
+    num_parents = 4,
+    crossover = NULL,
+    mutation = NULL,
+
+    initialize = function(probCross, crossParam, probMut, mutParam, crossover, mutation) {
+      self$crossover <- get_crossover(crossover, probCross, crossParam)
+      self$mutation <- get_mutation(mutation, probMut, mutParam)
+    },
+    next_children = function(n_variables) {
+      self$crossover$next_children(n_variables = n_variables)
+      self$mutation$next_children(n_variables = n_variables)
+    },
+  
+    variation = function(parents, domain) {
+      irace.assert(length(parents) == self$num_parents)
+      p1 <- parents[1]
+      p2 <- parents[2]
+      # Crossover
+      newVal <- self$crossover$do(p1, p2, domain)
+      # Mutation
+      newVal <- self$mutation$do(newVal, domain[1], domain[2])
+      return(newVal)
+    }
+))
+
+
+# Evolutionary Operators --------------------------------------------------
+
+DE_best_1_bin <- function(X_base, X_r1, X_r2, X_r3, CR, Fscale)
+{
+  if (runif(1) <= CR)
+    return(X_r1 + Fscale * (X_r2 - X_r3)) # base reproduction
+  else
+    return(X_base)
+}
+
+jade <- function(X_base, X_r1, X_r2, X_best, CR, Fscale)
+{
+  if (runif(1) <= CR)
+    return (X_base + Fscale*(X_best - X_base) + Fscale*(X_r1 - X_r2))
+  else
+    return(X_base)
 }
 
 get_parents <- function(parameters, eliteConfigurations, numParents,
@@ -350,18 +348,18 @@ ea_generate <- function (parameters, eliteConfigurations,
   
   for (idxConfiguration in seq_len(nbNewConfigurations)) {
     forbidden.retries <- 0
-    .irace$ea_variation$next_children()
+    .irace$ea_variation$next_children(parameters$nbVariable)
     while (forbidden.retries < 100) {
       # Get the parents for the configuration
       numParents <- .irace$ea_variation$num_parents
       parents <- get_parents(parameters, eliteConfigurations, numParents, digits, forbidden, repair)
       configuration <- empty_configuration
       print(paste("configuration1: ", length(configuration), length(namesParameters) + 1, sep =' '))
-      #print(configuration)
       padre <- parents[1, ".ID."]
       if(is.null(padre) || is.na(padre)) padre <- 0
       configuration[[".PARENT."]] <- padre
       print(paste("configuration1: ", length(configuration), length(namesParameters) + 1, sep =' '))
+      print(configuration)
       
       # Sample a value for every parameter of the new configuration.
       for (p in seq_along(namesParameters)) {
