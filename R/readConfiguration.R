@@ -868,10 +868,9 @@ printScenario <- function(scenario)
 #'      \item{\code{crossover}}{Crossover operator. (Default: \code{"uniform"})}
 #'      \item{\code{mutation}}{Mutation operator. (Default: \code{"polynomial"})}
 #'      \item{\code{ga_cross_prob}}{Probability of performing crossover. (Default: \code{0.5})}
-#'      \item{\code{ga_cross_param}}{Parameter of crossover. (Default: \code{0.5})}
-#'      \item{\code{ga_mut_prob}}{Probability of perform a mutation. (Default: \code{0.1})}
-#'      \item{\code{ga_mut_param}}{Parameter of mutation. (Default: \code{20})}
-#'      \item{\code{parameters_length}}{Parameter for two point crossover. (Default: \code{20})}
+#'      \item{\code{sbx_eta}}{Parameter of SBX. (Default: \code{0.5})}
+#'      \item{\code{ga_mut_prob}}{Probability of mutation (actual probability is divided by the number of variable parameters). (Default: \code{1})}
+#'      \item{\code{pm_eta}}{eta parameter of polynomial mutation. (Default: \code{20})}
 #'    }
 #' }
 # __IRACE_OPTIONS__END__

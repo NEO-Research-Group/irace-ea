@@ -701,7 +701,7 @@
       "type": "r",
       "short": "",
       "long": "--ga-mut-prob",
-      "default": 1.,
+      "default": 1.0,
       "section": "Evolutionary Algorithms",
       "description": "Probability of mutation (actual probability is divided by the number of variable parameters).",
       "vignettes": "Probability of perform a mutation."
@@ -713,6 +713,6 @@
       "long": "--pm-eta",
       "default": 20,
       "section": "Evolutionary Algorithms",
-      "description": "eta parameter of polynomial mutation.",
+      "description": "eta parameter of polynomial mutation."
   }
 ]
