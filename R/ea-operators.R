@@ -121,64 +121,43 @@ crossover_sbx <- function(p1, p2, distributionIndex, domain)
 
   distributionIndex <- distributionIndex + 1
   EPS <- 1.0e-14
-  offspring <- NULL
-  valueX1 <- p1
-  valueX2 <- p2
-  if (runif(1) <= 0.5) {
-    if (abs(valueX1 - valueX2) > EPS) {
-      y1 = NULL
-      y2 = NULL
-      if (valueX1 < valueX2) {
-        y1 = valueX1;
-        y2 = valueX2;
-      } else {
-        y1 = valueX2;
-        y2 = valueX1;
-      }
-      
-      lowerBound = domain[1]
-      upperBound = domain[2]
-      
-      rand = runif(1)
-      beta = 1.0 + (2.0 * (y1 - lowerBound) / (y2 - y1))
-      alpha = 2.0 - (beta ^ (-distributionIndex))
-      betaq = NULL
-      
-      if (rand <= (1.0 / alpha)) {
-        betaq = (rand * alpha) ^(1.0 / distributionIndex);
-      } else {
-        betaq = (1.0 / (2.0 - rand * alpha)) ^( 1.0 / distributionIndex);
-      }
-      c1 = 0.5 * (y1 + y2 - betaq * (y2 - y1));
-      
-      beta = 1.0 + (2.0 * (upperBound - y2) / (y2 - y1));
-      alpha = 2.0 - (beta^(-distributionIndex))
-      
-      if (rand <= (1.0 / alpha)) {
-        betaq = (rand * alpha)^(1.0 / distributionIndex)
-      } else {
-        betaq = 1.0 / (2.0 - rand * alpha)^(1.0 / distributionIndex)
-      }
-      c2 = 0.5 * (y1 + y2 + betaq * (y2 - y1))
-      
-      
-      if (runif(1) <= 0.5) {
-        offspring = c2
-        # offspring.get(1).variables().set(i, c1)
-      } else {
-        offspring = c1
-        # offspring.get(1).variables().set(i, c2);
-      }
-    } else {
-      offspring = valueX1
-      # offspring.get(1).variables().set(i, valueX2);
-    }
+  if (domain[1] >= domain[2]) return(p1)
+  if (abs(p1 - p2) < EPS) return(p1)
+  if (runif(1) >= 0.5) return(p1)
+
+  if (p1 < p2) {
+    y1 <- p1
+    y2 <- p2
   } else {
-    offspring = valueX2
-    # offspring.get(1).variables().set(i, valueX1);
+    y1 <- p2
+    y2 <- p1
+  }
+      
+  lowerBound <- domain[1]
+  upperBound <- domain[2]
+      
+  rand <- runif(1)
+
+  sbx_betaq <- function(beta, eta_c_p1, rand01) {
+    alpha <- 2. - (beta ^ (-eta_c_p1))
+    if (rand01 < (1. / alpha))
+      return((rand01 * alpha)^(1. / eta_c_p1))
+    return ((1. / (2. - rand01 * alpha))^(1. / eta_c_p1))
   }
 
-  return(offspring)
+  if (runif(1) < 0.5) {
+    beta <- 1. + (2. * (y1 - lowerBound) / (y2 - y1))
+    betaq <- sbx_betaq(beta, distributionIndex, rand)
+    c1 <- 0.5 * (y1 + y2 - betaq * (y2 - y1))
+    c1 <- min(max(c1, lowerBound), upperBound)
+    return(c1)
+  } else {
+    beta <- 1. + (2. * (upperBound - y2) / (y2 - y1))
+    betaq <- sbx_betaq(beta, distributionIndex, rand)
+    c2 <- 0.5 * (y1 + y2 + betaq * (y2 - y1))
+    c2 <- min(max(c2, lowerBound), upperBound)
+    return (c2)
+  }
 }
 
 # Process ONLY one parameter
