@@ -201,6 +201,14 @@ UniformCX <- R6::R6Class("UniformCX", inherit = Crossover, cloneable=FALSE,
    apply = function(p1, p2, ...) crossover_uniform(p1,p2)
 ))
 
+NoCX <- R6::R6Class("NoCX", inherit = Crossover, cloneable=FALSE,
+ public = list(
+   next_children = function(...) {
+      self$do_crossover <- FALSE
+    },
+    apply = function(p1, p2, ...) stop("Should never be executed")
+))
+
 TwoPoint <- R6::R6Class("TwoPoint", inherit = Crossover, cloneable=FALSE, 
   public = list(
     cut_points = c(-1,-1),
@@ -231,6 +239,7 @@ get_crossover <- function(x, probCross, crossParam)
          uniform = UniformCX$new(probCross),
          sbx = SBX$new(probCross, distributionIndex = crossParam[["distributionIndex"]]),
          "2point" = TwoPoint$new(probCross),
+         none = NoCX$new(probCross),
          irace.error("Unknown crossover"))
 
 

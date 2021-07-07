@@ -46,6 +46,8 @@ run_irace <- function(...)
   return(confs)
 }
 
+run_irace(ea_variation = "GA", crossover = "none", mutation = "polynomial")
+
 run_irace(ea_variation = "GA", crossover = "uniform", mutation = "polynomial")
 
 run_irace(ea_variation = "GA", crossover = "sbx", mutation = "polynomial")
