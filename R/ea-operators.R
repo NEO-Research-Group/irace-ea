@@ -55,6 +55,13 @@ int2binary <- function(x, n_bits = 128) {
   as.integer(x)
 }
 
+int2gray <- function(x, n_bits = 128) {
+  irace.assert(is.wholenumber(x))
+  x <- head(intToBits(as.integer(x)), n_bits)
+  x <- xor(x, c(x[2:length(x)],0))
+  as.integer(x)
+}
+
 # Precompute for speed.
 .powers_of_two <- 2L^(0L:63L)
 binary2int <- function(x) {
@@ -66,10 +73,24 @@ binary_bitflip <- function(x, prob) ifelse(runif(length(x)) < prob, 1L - x, x)
 
 mutation_intbitflip <- function(x, lower, upper, prob)
 {
-  x <- x - lower # to avoid negative numbers
+  # x <- x - lower # to avoid negative numbers
   n_bits <- ceiling(log2(1 + upper - lower))
   bitval <- int2binary(x, n_bits)
   newval <- binary_bitflip(bitval, prob / n_bits)
+  x <- binary2int(newval)
+  x <- min(x + lower, upper) # It could happen that becomes larger than the maximum.
+  x
+}
+
+mutation_intbitflip_gray <- function(x, lower, upper, prob)
+{
+  # x <- x - lower # to avoid negative numbers
+  n_bits <- ceiling(log2(1 + upper - lower))
+  bitval <- int2binary(x, n_bits)
+  pruned <- c(bitval[2:length(bitval)],0)
+  bitval <- as.integer(xor(bitval, pruned))
+  newval <- binary_bitflip(bitval, prob / n_bits)
+  newval <- as.integer(xor(newval, pruned))
   x <- binary2int(newval)
   x <- min(x + lower, upper) # It could happen that becomes larger than the maximum.
   x
@@ -106,11 +127,17 @@ IntegerBitFlip <- R6::R6Class("IntegerBitFlip", inherit = Mutation, cloneable=FA
   public = list(
     do = function(x, lower, upper) mutation_intbitflip(x, lower, upper, self$probMut / self$n_variables)
 ))
+
+IntegerBitFlipGray <- R6::R6Class("IntegerBitFlipGray", inherit = Mutation, cloneable=FALSE,
+                              public = list(
+                                do = function(x, lower, upper) mutation_intbitflip_gray(x, lower, upper, self$probMut / self$n_variables)
+                              ))
       
 get_mutation <- function(x, probMut, mutParam)
   switch(x,
          polynomial = PolynomialMutation$new(probMut, distributionIndex = mutParam[["distributionIndex"]]),
          bitflip = IntegerBitFlip$new(probMut),
+         bitflipgray = IntegerBitFlipGray$new(probMut),
          irace.error("Unknown mutation"))
 
 
@@ -308,10 +335,6 @@ get_parents <- function(parameters, eliteConfigurations, numParents,
     # Generate new parents configurations
     newConfigurationsAux <- sampleUniform(parameters, extraSol, digits, forbidden, repair)
     newConfigurationsAux[[".ID."]] <- 0
-    print("names")
-    print(names(eliteConfigurations))
-    print(names(newConfigurationsAux))
-    print(names(parents))
     parents <- rbind(parents, newConfigurationsAux)
   }
   return(parents)
