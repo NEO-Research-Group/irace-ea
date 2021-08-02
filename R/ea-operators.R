@@ -83,26 +83,14 @@ binary2int <- function(x) {
 
 binary_bitflip <- function(x, prob) ifelse(runif(length(x)) < prob, 1L - x, x)
 
-mutation_intbitflip <- function(x, lower, upper, prob)
+mutation_intbitflip <- function(x, lower, upper, prob, gray = FALSE)
 {
-  # x <- x - lower # shift to [0, upper - lower]
+  x <- x - lower # shift to [0, upper - lower]
   n_bits <- ceiling(log2(1 + upper - lower))
   bitval <- int2binary(x, n_bits)
+  if(gray) bitval <- binary2gray(bitval)
   newval <- binary_bitflip(bitval, prob / n_bits)
-  x <- binary2int(newval)
-  x <- min(x + lower, upper) # It could happen that becomes larger than the maximum.
-  x
-}
-
-mutation_intbitflip_gray <- function(x, lower, upper, prob)
-{
-  # x <- x - lower # shift to [0, upper - lower]
-  n_bits <- ceiling(log2(1 + upper - lower))
-  bitval <- int2binary(x, n_bits)
-  pruned <- c(bitval[2:length(bitval)],0)
-  bitval <- as.integer(xor(bitval, pruned))
-  newval <- binary_bitflip(bitval, prob / n_bits)
-  newval <- as.integer(xor(newval, pruned))
+  if(gray) newval <- gray2binary(newval)
   x <- binary2int(newval)
   x <- min(x + lower, upper) # It could happen that becomes larger than the maximum.
   x
@@ -142,7 +130,7 @@ IntegerBitFlip <- R6::R6Class("IntegerBitFlip", inherit = Mutation, cloneable=FA
 
 IntegerBitFlipGray <- R6::R6Class("IntegerBitFlipGray", inherit = Mutation, cloneable=FALSE,
                               public = list(
-                                do = function(x, lower, upper) mutation_intbitflip_gray(x, lower, upper, self$probMut / self$n_variables)
+                                do = function(x, lower, upper) mutation_intbitflip(x, lower, upper, self$probMut / self$n_variables, gray = TRUE)
                               ))
       
 get_mutation <- function(x, probMut, mutParam)
