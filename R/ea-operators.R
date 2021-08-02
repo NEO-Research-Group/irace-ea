@@ -55,11 +55,21 @@ int2binary <- function(x, n_bits = 128) {
   as.integer(x)
 }
 
-int2gray <- function(x, n_bits = 128) {
-  irace.assert(is.wholenumber(x))
-  x <- head(intToBits(as.integer(x)), n_bits)
-  x <- xor(x, c(x[2:length(x)],0))
-  as.integer(x)
+binary2gray <- function(x)
+{
+  # This follows the representation used in int2binary
+  # xor(x, x >> 1)
+  g <- xor(x, c(x[2:length(x)], 0))
+  as.integer(g)
+}
+
+gray2binary <- function(x)
+{
+  max <- length(x)
+  if (max == 1) return(as.integer(x))
+  b[max] <- x[max]
+  for(i in max:2) b[i - 1] <- xor(b[i], x[i - 1])
+  as.integer(b)
 }
 
 # Precompute for speed.
@@ -69,11 +79,13 @@ binary2int <- function(x) {
   sum(.powers_of_two[1:length(x)] * x)
 }
 
+# Test: for (i in 0:32) print(binary2int(gray2binary(binary2gray(int2binary(i)))))
+
 binary_bitflip <- function(x, prob) ifelse(runif(length(x)) < prob, 1L - x, x)
 
 mutation_intbitflip <- function(x, lower, upper, prob)
 {
-  # x <- x - lower # to avoid negative numbers
+  # x <- x - lower # shift to [0, upper - lower]
   n_bits <- ceiling(log2(1 + upper - lower))
   bitval <- int2binary(x, n_bits)
   newval <- binary_bitflip(bitval, prob / n_bits)
@@ -84,7 +96,7 @@ mutation_intbitflip <- function(x, lower, upper, prob)
 
 mutation_intbitflip_gray <- function(x, lower, upper, prob)
 {
-  # x <- x - lower # to avoid negative numbers
+  # x <- x - lower # shift to [0, upper - lower]
   n_bits <- ceiling(log2(1 + upper - lower))
   bitval <- int2binary(x, n_bits)
   pruned <- c(bitval[2:length(bitval)],0)
